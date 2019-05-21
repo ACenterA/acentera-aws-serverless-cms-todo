@@ -74,3 +74,10 @@ backend/go/template.*.yml
 backend/go/template.*.yml.*
 backend/go/customvendors/static/main.go
 backend/go/handlers/app/main
+backend/go/packaged-*.*
+backend/go/.template.*
+backend/go/LICENSE
+backend/go/README.md
+backend/go/output.yml
+backend/go/shared/
+.aws.*

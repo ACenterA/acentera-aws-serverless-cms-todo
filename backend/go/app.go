@@ -203,7 +203,7 @@ func AppPluginSiteBootstrap(lib acenteralib.SharedLib, c *gin.Context, reqObj ac
 			nPlugin.Id = os.Getenv("SITE_KEY") // this plugin site key // if defined?
 			nPlugin.Title = os.Getenv("SITE_TITLE")
 			if nPlugin.Title == "" {
-				nPlugin.Title = os.Getenv("PLUGIN_NAMEe")
+				nPlugin.Title = os.Getenv("PLUGIN_NAME")
 			}
 			if nPlugin.Title == "" {
 				nPlugin.Title = nPlugin.Id
@@ -215,46 +215,59 @@ func AppPluginSiteBootstrap(lib acenteralib.SharedLib, c *gin.Context, reqObj ac
 			// appSiteRef, errTmp := GetSite(refSiteHash, "UnUsedName")
 
 			nPlugin.Aws = appSettings.Aws
+
+			cognitoMap := nPlugin.Aws["cognito"]
+			if (cognitoMap == nil) {
+				nPlugin.Aws["cognito"] = map[string]string{}
+				cognitoMap = nPlugin.Aws["cognito"]
+			}
+
+			// In case we receive different userepool as parameters ...
+			cognitoMap["APP_CLIENT_ID"] = IfThenElse(os.Getenv("UserPoolClientId") == "", cognitoMap["APP_CLIENT_ID"], os.Getenv("UserPoolClientId"))
+			cognitoMap["IDENTITY_POOL_ID"] = IfThenElse(os.Getenv("IdentityId") == "", cognitoMap["IDENTITY_POOL_ID"], os.Getenv("IdentityId"))
+			cognitoMap["USER_POOL_ID"] = IfThenElse(os.Getenv("IdentityId") == "", cognitoMap["USER_POOL_ID"], os.Getenv("UserPoolId"))
+			cognitoMap["REGION"] = IfThenElse(os.Getenv("IdentityId") == "", cognitoMap["REGION"], os.Getenv("REGION"))
+
 			nPlugin.Graphql = appSettings.Graphql
-			fmt.Println("2 - SITE HASH APP SETTINGS... is")
-			if nPlugin.Graphql == nil {
-				fmt.Println("3 - SITE HASH APP SETTINGS... is")
-				// The Parent does not have a graphql endpoint ?
-
-				// TODO: Get any GraphQL
-				req, resp := acenteralib.Cloudformation.DescribeStacksRequest(&cloudformation.DescribeStacksInput{
-					StackName: aws.String(stackName),
-				})
-				fmt.Println("3 - SITE HASH APP SETTINGS... is")
-				errSend := req.Send()
-				if errSend != nil { // resp is now filled
-					fmt.Println(errSend)
-					r := events.APIGatewayProxyResponse{
-						Body: string("{ \"message\": \"Stack not found\" }\n"),
-						Headers: map[string]string{
-							"Content-Type": "application/json",
-						},
-						StatusCode: 404,
+			GraphApiEndpoint := os.Getenv("GraphApiEndpoint")
+			if (GraphApiEndpoint != "") {
+				nPlugin.Graphql = map[string]string{}
+				nPlugin.Graphql["URL"] = GraphApiEndpoint
+				nPlugin.Graphql["REGION"] = os.Getenv("REGION")
+			} else {
+				if nPlugin.Graphql == nil {
+					// The Parent does not have a graphql endpoint ?
+					// TODO: Get any GraphQL
+					req, resp := acenteralib.Cloudformation.DescribeStacksRequest(&cloudformation.DescribeStacksInput{
+						StackName: aws.String(stackName),
+					})
+					fmt.Println("3 - SITE HASH APP SETTINGS... is")
+					errSend := req.Send()
+					if errSend != nil { // resp is now filled
+						fmt.Println(errSend)
+						r := events.APIGatewayProxyResponse{
+							Body: string("{ \"message\": \"Stack not found\" }\n"),
+							Headers: map[string]string{
+								"Content-Type": "application/json",
+							},
+							StatusCode: 404,
+						}
+						return r, nil
 					}
-					return r, nil
-				}
-
-				stacks := resp.Stacks
-				stackObject := stacks[0]
-
-				GraphQLEndpoint := ""
-				for _, outputIface := range stackObject.Outputs {
-					// tmpOutput := outputIface.(map[string]string)
-					if *outputIface.OutputKey == "ApiEndpoint" {
-						GraphQLEndpoint = *outputIface.OutputValue
+					stacks := resp.Stacks
+					stackObject := stacks[0]
+					GraphQLEndpoint := ""
+					for _, outputIface := range stackObject.Outputs {
+						// tmpOutput := outputIface.(map[string]string)
+						if *outputIface.OutputKey == "ApiEndpoint" {
+							GraphQLEndpoint = *outputIface.OutputValue
+						}
 					}
-				}
-
-				if GraphQLEndpoint != "" {
-					nPlugin.Graphql = map[string]string{}
-					nPlugin.Graphql["URL"] = GraphQLEndpoint
-					nPlugin.Graphql["REGION"] = os.Getenv("REGION")
-					fmt.Println("GRAPHQL ENDPOINT IS ", nPlugin.Graphql)
+					if GraphQLEndpoint != "" {
+						nPlugin.Graphql = map[string]string{}
+						nPlugin.Graphql["URL"] = GraphQLEndpoint
+						nPlugin.Graphql["REGION"] = os.Getenv("REGION")
+					}
 				}
 			}
 

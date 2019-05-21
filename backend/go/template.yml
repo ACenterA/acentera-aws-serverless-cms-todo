@@ -34,6 +34,16 @@ Outputs:
       Fn::Sub: "https://${PluginRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
     Description: The API Url
 
+  ApiId:
+    Description: GraphQL API ID
+    Value:
+      Fn::GetAtt: GraphApi.ApiId
+
+  ApiEndpoint:
+    Description: GraphQL API Endpoint
+    Value:
+      Fn::GetAtt: GraphApi.GraphQLUrl
+
 Parameters:
 
     SiteKey:
@@ -41,7 +51,7 @@ Parameters:
       Default: "a2f9b231-88b5-40c9-9f75-cc14f854a7bb"
       Type: String
 
-    DataKey:
+    SiteDataKey:
       Description: "ACenterA Site Key from Admin Portal"
       Default: "a2f9b231-88b5-40c9-9f75-cc14f854a7bb"
       Type: String
@@ -56,12 +66,27 @@ Parameters:
       Default: 'acentera-<%STAGE%>-clientsecret'
       NoEcho: True
 
-
-
     ServerSecret:
       Type : 'AWS::SSM::Parameter::Value<String>'
       Default: 'acentera-<%STAGE%>-serversecret'
       NoEcho: True
+
+
+    # Custom userpool informations to store in the dynamodb
+    UserPoolId:
+      Type: String
+      Default: ''
+      Description: (Optional) Custom UserPoolId
+
+    UserPoolClientId:
+      Type: String
+      Default: ''
+      Description: (Optional) Custom UserPoolClientId
+
+    IdentityPoolId:
+      Type: String
+      Default: ''
+      Description: (Optional) Custom IdentityPoolId
 
 Mappings:
   Cognito:
@@ -107,7 +132,7 @@ Globals:
           Fn::Sub: "${AWS::StackId}"
         PLUGIN_NAME: "<%PLUGIN_NAME%>"
         SITE_KEY: 
-           Ref: DataKey                                    # Data key ie: ssk = X in queries
+           Ref: SiteDataKey                                # Data key ie: ssk = X in queries
         SITE: 
            Ref: SiteKey                                    # An Unique SiteKey (or optional to add to the same default site)
         SITE_TITLE: "ServerLess ToDo App"
@@ -117,6 +142,20 @@ Globals:
            Ref: Secret
         SECRET: 
            Ref: ServerSecret
+
+        # Custom userpool informations to store in the dynamodb
+        UserPoolId:
+           Ref: UserPoolId
+        UserPoolClientId:
+           Ref: UserPoolClientId
+        IdentityPoolId:
+           Ref: IdentityPoolId
+
+        GraphApiId:
+          Fn::GetAtt: GraphApi.ApiId
+        GraphApiEndpoint:
+          Fn::GetAtt: GraphApi.GraphQLUrl
+
     Handler: main
     Runtime: go1.x
     Timeout: 60
@@ -125,6 +164,17 @@ Globals:
 #    Tracing: Active
 
 Resources:
+
+  GraphApi:
+    Type: AWS::AppSync::GraphQLApi
+    Description: <%PLUGIN_NAME%> Graph Api
+    Properties:
+      AuthenticationType: AWS_IAM # AMAZON_COGNITO_USER_POOLS
+      Name: 
+        Fn::Sub: ${AWS::StackName}
+      #LogConfig:
+      #  CloudWatchLogsRoleArn: !GetAtt AppSyncServiceRole.Arn
+      #  FieldLogLevel: "ERROR"
 
   RequestsLayer:
     Type: 'AWS::Serverless::LayerVersion'
@@ -507,11 +557,12 @@ Resources:
   # Limit actions by cognito groups or iam auth example ...
   # https://docs.aws.amazon.com/appsync/latest/devguide/security.html#aws-iam-authorization
   AppSyncSchema:
+    DependsOn:
+    - GraphApi
     Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: 
-        Fn::ImportValue:
-          Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       DefinitionS3Location: schema.graphql
 
   ModelLambda:
@@ -536,8 +587,7 @@ Resources:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: 
-        Fn::ImportValue:
-          Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       Name:
          Fn::Sub: "acentera_model"
       Type: AWS_LAMBDA
@@ -552,8 +602,7 @@ Resources:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: 
-        Fn::ImportValue:
-           Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       Name: 
          Fn::Sub: "acentera_model_projects"
       Type: AWS_LAMBDA
@@ -568,8 +617,7 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: 
-         Fn::ImportValue:
-           Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       TypeName: Query
       FieldName: listProjects
       DataSourceName: 
@@ -581,8 +629,7 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: 
-        Fn::ImportValue:
-           Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       TypeName: Query
       FieldName: listAllProjects
       DataSourceName: 
@@ -595,8 +642,7 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: 
-         Fn::ImportValue: 
-            Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       TypeName: Mutation
       FieldName: createProject
       DataSourceName: 
@@ -608,8 +654,7 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: 
-         Fn::ImportValue:
-           Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       TypeName: Mutation
       FieldName: updateProject
       DataSourceName: 
@@ -621,8 +666,7 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: 
-         Fn::ImportValue:
-           Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       TypeName: Mutation
       FieldName: deleteProject
       DataSourceName: 
@@ -634,8 +678,7 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: 
-        Fn::ImportValue:
-          Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       TypeName: Query
       FieldName: listPosts
       DataSourceName: 
@@ -647,8 +690,7 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: 
-        Fn::ImportValue:
-           Fn::Sub: "acentera:<%STAGE%>:AppSync:ApiId"
+        Fn::GetAtt: 'GraphApi.ApiId'
       TypeName: Mutation
       FieldName: createPost
       DataSourceName: 
