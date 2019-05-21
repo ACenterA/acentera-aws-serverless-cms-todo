@@ -1,8 +1,11 @@
 # aws-serverless-cms-todo-app
 
-Vue.JS Project / Todo App
+Vue.JS sample Project & Todo App
 
 This repository is based on the [Vue Element Admin](https://github.com/PanJiaChen/vue-element-admin) Vue.JS admin.
+
+If this app has been deployed fully using the [serverless repository link](https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:356769441913:applications~acentera-prod-serverless-cms-todo-app), once the cloudformatio nstack has been created, you should access the web application from the *WebsiteUrl cloudformation outputs*.
+
 
 # ENV File Informations
 
@@ -44,6 +47,14 @@ Using Docker Compose only
 | DynamoDB   | http://127.0.0.1:8001/ | DynamoDB Tables |
 | GraphQL    | http://127.0.0.1:4000/ | Apollo GraphQL Server |
 | API Gateway Proxy | http://127.0.0.1:2000/ | API Gateway Proxy (acentera core or plugin routing) |
+
+# Launching using AWS Serverless Repo
+
+Once you have deployed the serverless repo through the Serverless Repository, you should have a Cloudfront distributin created.
+
+You may check in the stack output for the WebsiteUrl to use. 
+
+Note: The Cloudfront should pass an 'X-Site' header that represent the SiteKey.
 
 # Deploy on AWS
 
