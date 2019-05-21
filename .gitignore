@@ -82,4 +82,4 @@ backend/go/output.yml
 backend/go/shared/
 .aws.*
 /go/
-backend/go/sam-package.sh
+./backend/go/sam-package.sh
