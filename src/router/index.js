@@ -150,6 +150,9 @@ export const routerValid = [
     id: 3,
     layout: 'Layout',
     hidden: false,
+    meta: {
+      roles: ['admin']
+    },
     children: [
       {
         id: 8,
@@ -172,6 +175,9 @@ export const routerValid = [
     innerMenu: adminPluginNameMenu,
     hidden: false,
     flatChildrens: true,
+    meta: {
+      roles: ['admin']
+    },
     children: [
       {
         path: '',
