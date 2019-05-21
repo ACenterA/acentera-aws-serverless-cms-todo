@@ -42,6 +42,8 @@ services:
        context: backend/go/.
     volumes:
       - ./backend/go/:/go/src/github.com/myplugin/gofaas
+      - ./README.md:/go/src/github.com/myplugin/gofaas/README.md:ro
+      - ./LICENSE:/go/src/github.com/myplugin/gofaas/LICENSE:ro
       - ./go/shared:${PWD}/backend/go/shared
       - ./backend/go/customvendors/static:/go/src/github.com/acenterastatic/static
       - /var/run/docker.sock:/var/run/docker.sock:rw
@@ -65,6 +67,7 @@ services:
       - KEY_ID=a3A8Kaz#$$1kJ#$$1!
       - JWT_SECRET=docker-compose-secret
       - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
       - AWS_DEFAULT_REGION=us-east-1
       - S3_BUCKET
       - AWS_CONTAINER_CREDENTIALS_RELATIVE_URI

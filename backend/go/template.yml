@@ -9,6 +9,8 @@ Metadata:
 
 This solution is great to get started with your first serverless application.'
     Author: 'ACentetrA'
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
     SpdxLicenseId: Apache-2.0
     Labels: ['cms','serverless','serverlesscms','acentera','plugins', 'todo']
     HomePageUrl: https://acentera.com/
