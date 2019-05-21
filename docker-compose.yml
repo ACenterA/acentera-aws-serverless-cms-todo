@@ -1,0 +1,89 @@
+
+version: '3.7'
+services:
+  serverless-cms-vue:
+    build:
+      context: .
+    volumes:
+      - .:/usr/app/
+      - ./entrypoint.sh:/usr/local/bin/entrypoint.sh
+      - ./backend/go/customvendors/static:/customvendors/static
+    environment:
+       HOST: 0.0.0.0
+       PORT: 80
+       DEV_ACCOUNTID: ${DEV_ACCOUNTID}
+    networks:
+      backend:
+        aliases:
+          - serverless-cms-vue
+    ports:
+      - "127.0.0.1:81:80"
+
+  serverless-cms-graphql:
+    build:
+      context: .
+      dockerfile: Dockerfile-graph
+    volumes:
+      - ./backend/appsync.local.js:/usr/app/appsync.local.js
+      - ./backend/go/schema.graphql:/usr/app/schema.graphql
+      - ./backend/go/template.yml:/usr/app/template.yml
+    environment:
+       LOCAL_LAMBDA_HOST: serverless-cms
+       LOCAL_LAMBDA_PORT: 3001
+    networks:
+      backend:
+        aliases:
+          - serverless-cms-graphql
+    ports:
+      - "127.0.0.1:4000:4000"
+
+  serverless-cms:
+    build: 
+       context: backend/go/.
+    volumes:
+      - ./backend/go/:/go/src/github.com/myplugin/gofaas
+      - ./go/shared:${PWD}/backend/go/shared
+      - ./backend/go/customvendors/static:/go/src/github.com/acenterastatic/static
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    # network_mode: bridge
+    networks:
+      backend:
+        aliases:
+          - serverless-cms
+    environment:
+      - AWS_SECRET_ACCESS_KEY="a"
+      - DOCKER_NETWORK=${COMPOSE_PROJECT_NAME}_backend
+      - DISPLAY
+#      - AWS_SECRET_ACCESS_KEY
+      - LOGINSRV_DYNAMODB=endpoint=http://dynamodb:8000,table=app-data
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
+      - APP_DATA_TABLE_NAME=app-data
+      - APP_DATA_PERM_TABLE_NAME=app-data-permissions
+      - SESSION_TABLE_NAME=app-data-sessions
+      - PLUGINNAME=serverless-cms
+      - PluginName=serverless-cms
+      - KEY_ID=a3A8Kaz#$$1kJ#$$1!
+      - JWT_SECRET=docker-compose-secret
+      - AWS_ACCESS_KEY_ID
+      - AWS_DEFAULT_REGION=us-east-1
+      - S3_BUCKET
+      - AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
+      - AWS_EXECUTION_ENV
+      - AWS_DEFAULT_REGION
+      - AWS_REGION
+      - PHONE
+      - EMAIL
+      - ServerSecretKey
+      - ClientJwtSecretKey
+      - HOME_PWD=${PWD}/backend/go/
+      - DEV_ACCOUNTID=${DEV_ACCOUNTID}
+      # - PATH=/usr/local/bin/:/home/atom/node_modules/serverless/bin/:/usr/bin:/bin:/usr/local/go/bin/
+    ports:
+      - "3003:3000"
+      - "3001:3000"
+    command: |
+       make dev
+       
+networks:
+    backend:
+      name: ${COMPOSE_PROJECT_NAME}_backend

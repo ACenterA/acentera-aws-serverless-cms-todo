@@ -1,0 +1,95 @@
+version: '3.7'
+services:
+  dynamodb:
+    image: acentera/prod:acentera-aws-dynamodb-0.0.1
+    volumes:
+     - dynamodb:/data/
+    ports:
+     - "127.0.0.1:8000:8000"
+    command: |
+      -jar /home/dynamodblocal/DynamoDBLocal.jar -dbPath /data/ -sharedDb -cors '*'
+    networks:
+      backend:
+        aliases:
+          - dynamodb
+
+  # Dynamodb Admin
+  dynamodb-admin:
+    image: acentera/prod:acentera-aws-dynamodb-admin-0.0.1
+    environment:
+      DYNAMO_ENDPOINT: "http://dynamodb:8000"
+      APP_DATA_TABLE_NAME: app-data
+      APP_DATA_PERM_TABLE_NAME: app-data-permissions
+      SESSION_TABLE_NAME: app-data-sessions
+      AWS_DEFAULT_REGION: local
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+    ports:
+      - "127.0.0.1:8001:8001"
+    networks:
+      backend:
+        aliases:
+          - dynamodb-admin
+
+  core:
+    image: acentera/prod:acentera-aws-core-0.0.2
+    volumes:
+      - /dev/shm:/dev/shm
+      - ./go/:/lambda/
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    environment:
+      - SKIP_COGNITO=true
+      - SKIP_SSM=true
+      - DOCKER_NETWORK=${COMPOSE_PROJECT_NAME}_backend
+      - DISPLAY
+#      - AWS_SECRET_ACCESS_KEY
+      - LOGINSRV_DYNAMODB=endpoint=http://dynamodb:8000,table=app-data
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
+      - APP_DATA_TABLE_NAME=app-data
+      - APP_DATA_PERM_TABLE_NAME=app-data-permissions
+      - SESSION_TABLE_NAME=app-data-sessions
+      - KEY_ID=a3A8Kaz#$$1kJ#$$1!
+      - JWT_SECRET=docker-compose-secret
+      - HOME_PWD=${PWD}/go/
+      - AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
+      - ADMIN_USERNAME
+    ports:
+     - "127.0.0.1:3000:3000"
+       # old cmd #make dev
+    networks:
+      backend:
+        aliases:
+          - core
+
+  core-vue:
+    image: acentera/prod:acentera-aws-core-vuejs-0.0.2
+    environment:
+       HOST: 0.0.0.0
+       PORT: 80
+       DEV_ACCOUNTID: ${DEV_ACCOUNTID}
+       API_HOST: 127.0.0.1
+       SITE_TITLE: ${SITE_TITLE}
+    networks:
+      backend:
+        aliases:
+          - core-vue
+    ports:
+      - "127.0.0.1:80:80"
+
+  proxy:
+    image: acentera/prod:acentera-aws-core-proxy-0.0.1
+    env_file:
+       - .env
+    networks:
+      backend:
+        aliases:
+          - proxy
+    ports:
+      - "127.0.0.1:2000:2000"
+
+networks:
+    backend:
+      name: ${COMPOSE_PROJECT_NAME}_backend
+
+volumes:
+   dynamodb:

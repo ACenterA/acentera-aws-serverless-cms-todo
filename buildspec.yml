@@ -1,0 +1,46 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+        docker: 18
+
+    commands:
+      - if [ ! -e node_modules/webpack ]; then npm install; fi;
+
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+  
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...          
+      - docker-compose -f docker-compose-aws.yml build 2>&1 
+      - echo Run ci
+      - docker-compose -f docker-compose-aws.yml run -T serverless-cms-vue build-ci.sh
+      - echo Run make template
+      - docker-compose -f docker-compose-aws.yml run -T serverless-cms make template
+      - ls -latrh backend/go/.*
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+
+cache:
+  paths:
+    - 'node_modules/**/*'
+
+# artifacts:
+#      files: .template.yml.prod
+#      - aws cloudformation package --template-file template.yaml --output-template-file outputtemplate.yaml
+#      - aws cloudformation deploy --template-file outputtemplate.yaml -stack-name simple-todo-vuejs-app
+artifacts:
+  files: 
+    - '**/output.yml'
+  base-directory: 'backend/go*'
+  discard-paths: yes
+
