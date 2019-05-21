@@ -7,6 +7,23 @@ This repository is based on the [Vue Element Admin](https://github.com/PanJiaChe
 If this app has been deployed fully using the [serverless repository link](https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:356769441913:applications~acentera-prod-serverless-cms-todo-app), once the cloudformatio nstack has been created, you should access the web application from the *WebsiteUrl cloudformation outputs*.
 
 
+Once you navigate to the Cloudfront URL you should have a login page that looks like the following:
+
+  ![01 - User Login](https://github.com/ACenterA/acentera-aws-serverless-cms-todo/raw/master/docs/images/01_login_user.png)
+
+With a valid cognito user (from the ACenterA Core), you should be able to log-in using an MFA confirmation code.
+
+  ![02 - User MFA](https://github.com/ACenterA/acentera-aws-serverless-cms-todo/raw/master/docs/images/02_login_user_mfa.png)
+
+Once logged-in you should be able to navigate to the "Administration" section, only if your user is part of the "Admin" cognito group
+
+  ![04 - Create Projects](https://github.com/ACenterA/acentera-aws-serverless-cms-todo/raw/master/docs/images/04_admin_create_project.png)
+  
+As admin you can list projects 
+
+  ![06 - Manage Projects](https://github.com/ACenterA/acentera-aws-serverless-cms-todo/raw/master/docs/images/05_manage_projects.png)
+
+
 # ENV File Informations
 
     $ cat .env
