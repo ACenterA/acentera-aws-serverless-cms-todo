@@ -13,3 +13,4 @@
 !backend/package.json
 !backend/*.js
 !build-ci.sh
+!/backend/go/

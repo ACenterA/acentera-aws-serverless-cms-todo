@@ -6,7 +6,7 @@ COPY backend/package.json /usr/app/package.json
 RUN npm install
 
 COPY backend/appsync.local.js /usr/app/appsync.local.js
-COPY src/go/template.yml /usr/app/template.yml
-COPY src/go/schema.graphql /usr/app/schema.graphql
+COPY backend/go/template.yml /usr/app/template.yml
+COPY backend/go/schema.graphql /usr/app/schema.graphql
 
 CMD ["node", "appsync.local.js"]

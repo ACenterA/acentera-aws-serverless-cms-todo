@@ -67,6 +67,7 @@ services:
        HOST: 0.0.0.0
        PORT: 80
        DEV_ACCOUNTID: ${DEV_ACCOUNTID}
+       ENV_CONFIG: ${ENV_CONFIG}
        API_HOST: 127.0.0.1
        SITE_TITLE: ${SITE_TITLE}
     networks:

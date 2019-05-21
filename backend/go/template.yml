@@ -39,6 +39,11 @@ Parameters:
       Default: "a2f9b231-88b5-40c9-9f75-cc14f854a7bb"
       Type: String
 
+    DataKey:
+      Description: "ACenterA Site Key from Admin Portal"
+      Default: "a2f9b231-88b5-40c9-9f75-cc14f854a7bb"
+      Type: String
+
     Secret:
       Type : 'AWS::SSM::Parameter::Value<String>'
       Default: 'acentera-<%STAGE%>-secret'
@@ -100,7 +105,7 @@ Globals:
           Fn::Sub: "${AWS::StackId}"
         PLUGIN_NAME: "<%PLUGIN_NAME%>"
         SITE_KEY: 
-           Ref: SiteKey                                    # An Unique SiteKey (or optional to add to the same default site)
+           Ref: DataKey                                    # Data key ie: ssk = X in queries
         SITE: 
            Ref: SiteKey                                    # An Unique SiteKey (or optional to add to the same default site)
         SITE_TITLE: "ServerLess ToDo App"
