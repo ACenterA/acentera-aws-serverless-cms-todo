@@ -1,0 +1,31 @@
+
+query listTasks($project: String, $limit: Int, $nextToken: String) {
+  listTasks(
+    project: $project,
+    limit: $limit,
+    nextToken: $nextToken
+  ) {
+      items {
+        id,
+        title,
+        status,
+        created
+      },
+      nextToken
+  }
+}
+
+mutation CreateTaskMutation($project: String!, $title: String!, $completed: Boolean!) {
+  createTask(
+    input: {
+      title: $title,
+      project: $project,
+      completed: $completed
+    }
+  ) {
+    id,
+    title,
+    completed,
+    created
+  }
+}

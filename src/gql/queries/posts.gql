@@ -1,0 +1,67 @@
+enum LangEnum {
+    fr
+    en
+}
+
+query listPosts($project: String, $limit: Int, $nextToken: String) {
+  listPosts(
+    project: $project,
+    limit: $limit,
+    nextToken: $nextToken
+  ) {
+      items {
+        id,
+        title,
+        languages,
+        created
+      },
+      nextToken
+  }
+}
+
+mutation CreatePostMutation($project: String!, $lang: String, $title: String!) {
+  createPost(
+    input: {
+      title: $title,
+      lang: $lang,
+      project: $project
+    }
+  ) {
+    userPost {
+      post {
+        id
+        translations {
+          slug,
+          title
+        }
+      }
+    }
+  }
+}
+
+
+
+# CRUD MUTATIONS
+mutation deletePost($id: ID!) {
+  deleteProject(
+    input: {
+      id: $id
+    }
+  ) {
+    id
+  }
+}
+
+
+mutation updatePost($id: ID!, $title: String!, $status: String!) {
+  updateProject(
+    input: {
+      id: $id
+      title: $title
+    }
+  ) {
+    id
+    title
+    updated
+  }
+}

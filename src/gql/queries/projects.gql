@@ -1,0 +1,79 @@
+
+query ALL_PROJECTS {
+  listAllProjects {
+    items {
+      id,
+      title,
+      status,
+      created,
+      updated
+    }
+  }
+}
+
+subscription onCreateProject {
+  onCreateProject {
+    id
+    title
+    status
+  }
+}
+
+query listProjects($limit: Int, $nextToken: String) {
+  listProjects(
+    limit: $limit,
+    nextToken: $nextToken
+  ) {
+      items {
+        id,
+        title,
+        status,
+        created
+      },
+      nextToken
+  }
+}
+
+
+# CRUD MUTATIONS
+mutation deleteProject($id: ID!) {
+  deleteProject(
+    input: {
+      id: $id
+    }
+  ) {
+    id
+    status
+  }
+}
+
+
+mutation updateProject($id: ID!, $title: String!, $status: String!) {
+  updateProject(
+    input: {
+      id: $id
+      title: $title
+      status: $status
+    }
+  ) {
+    id
+    title
+    status
+    updated
+  }
+}
+
+
+mutation CreateProjectMutation($title: String!, $status: String!) {
+  createProject(
+    input: {
+      title: $title,
+      status: $status
+    }
+  ) {
+    id
+    title
+    status
+    created
+  }
+}
