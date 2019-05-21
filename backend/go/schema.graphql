@@ -1,0 +1,215 @@
+
+input CreateProjectInput {
+  title: String!
+  status: String!
+}
+
+input UpdateProjectInput {
+  id: ID!
+  title: String!
+  status: String!
+}
+
+input DeleteProjectInput {
+  id: ID!
+}
+
+input CreatePostInput {
+  project: String!
+  lang: String
+  author: String
+  title: String
+  content: String
+  description: String
+}
+
+input UpdatePostInput {
+  id: ID!
+  title: String
+  completed: Boolean
+}
+
+input DeletePostInput {
+  id: ID!
+}
+
+type Mutation {
+  createProject(input: CreateProjectInput!): Project
+  updateProject(input: UpdateProjectInput!): Project
+  deleteProject(input: DeleteProjectInput!): Project
+
+  createPost(input: CreatePostInput!): CreatePostOutput
+  updatePost(input: UpdatePostInput!): Post
+  deletePost(input: DeletePostInput!): Post
+}
+
+type CreatePostOutput {
+  userPost: UserPost
+  query: Query
+}
+
+type Query {
+  listAllProjects: ProjectConnection!
+  listProjects(limit: Int, nextToken: String): ProjectConnection!
+
+  getPost(id: ID!): Post
+  listPosts(project: String, lang: LangEnum, limit: Int, nextToken: String): PostConnection!
+}
+
+input S3ObjectInput {
+  bucket: String!
+  key: String!
+  region: String!
+}
+
+type S3Object {
+  bucket: String
+  key: String
+  region: String
+}
+
+### POSTS
+# Get next scheduled posts ... to proceed
+# Get Latest Posts by Type ( published, scheduled, draft ..)
+# For a User get the Posts that he has ( Created, Interacted, Viewed )
+#
+
+enum UserPostConnectionType {
+    created
+    interacted
+    viewed
+}
+
+enum PostStatusType {
+    published
+    draft
+    scheduled
+}
+
+enum LangEnum {
+    fr
+    en
+}
+
+type User {
+  id: ID!
+  posts(limit: Int, type: UserPostConnectionType, nextToken: String): UserPostConnection
+  profilePicture: S3Object
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+type UserPost {
+  post: Post!
+  user: User!
+}
+
+type UserPostConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [Post]!
+  lang: LangEnum
+  nextToken: String
+}
+
+type Project {
+  id: ID!
+  title: String!
+  status: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+type ProjectConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [Project!]!
+  nextToken: String
+}
+
+# what about languages?
+type Post {
+  id: ID!
+  title: String!
+  author: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+  languages: [LangEnum]!
+  translations(lang: LangEnum): PostMetadataConnection
+  comments(lang: LangEnum, limit: Int, nextToken: String): PostCommentConnection
+  categories: [String]
+  tags: [String]
+  views: Int
+}
+
+type PostMetadataConnection {
+  id: ID!
+  title: String!
+  slug: String!
+  content: String!
+  description: String!
+  status: String!
+  published: AWSDateTime
+  views: Int
+}
+
+type Comment {
+  id: ID!
+  postId: String!
+  lang: LangEnum!
+  author: String!
+  content: String!
+  upvotes: Int
+  downvotes: Int
+}
+
+type PostCommentConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [Comment]!
+  nextToken: String
+}
+
+
+type Category {
+  id: ID!
+  title: String!
+  status: String!
+  completed: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+  categories: [String]!
+}
+
+type Notes {
+  id: ID!
+  content: String!
+}
+
+type PostConnection {
+  items: [Post!]!
+  nextToken: String
+}
+
+type Subscription {
+  onCreateProject(id: ID, title: String, status: String): Project
+  onUpdateProject(id: ID, title: String, status: String): Project
+  onDeleteProject(id: ID, title: String, status: String): Project
+
+  onCreatePost(id: ID, title: String, completed: Boolean): CreatePostOutput
+  onUpdatePost(id: ID, title: String, completed: Boolean): Post
+  onDeletePost(id: ID, title: String, completed: Boolean): Post
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
