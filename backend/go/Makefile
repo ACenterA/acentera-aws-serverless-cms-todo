@@ -26,6 +26,7 @@ deploy-static: web/static/index.html
 
 dev:
 	export GOOS=linux
+	gqlmerge ./schema schema.graphql
 	make -j dev-watch dev-sam
 dev-sam:
 	sam local start-lambda --host 0.0.0.0 -p 3001 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -n env.json &

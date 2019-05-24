@@ -9,6 +9,7 @@
     },
     "dependencies": {
         "bcryptjs": "^2.4.3",
+        "graphql-s2s": "^0.20.0",
         "jsonwebtoken": "^8.1.1",
         "mysql2": "^1.5.3",
         "rand-token": "^0.4.0"

@@ -221,16 +221,18 @@ type CreateTasksOutput {
 }
 
 type TasksListing implements TasksInterface {
+  author_name: String!
   id: ID!
   title: String!
-  author_name: String!
   created: AWSDateTime
   updated: AWSDateTime
 }
 
 type Tasks implements TasksInterface {
+  author_p: String!
   id: ID!
   title: String!
+  author_name: String!
   created: AWSDateTime
   updated: AWSDateTime
 }

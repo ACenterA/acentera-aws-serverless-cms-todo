@@ -11,12 +11,15 @@ import (
 	// "strings"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 
 	// "crypto/sha1"
 	// "encoding/base64"
 
 	// "github.com/pkg/errors"
 	"github.com/aws/aws-lambda-go/events"
+	jwt "github.com/dgrijalva/jwt-go"
+
 	// cfn "github.com/aws/aws-lambda-go/cfn"
 	// "github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws"
@@ -217,7 +220,7 @@ func AppPluginSiteBootstrap(lib acenteralib.SharedLib, c *gin.Context, reqObj ac
 			nPlugin.Aws = appSettings.Aws
 
 			cognitoMap := nPlugin.Aws["cognito"]
-			if (cognitoMap == nil) {
+			if cognitoMap == nil {
 				nPlugin.Aws["cognito"] = map[string]string{}
 				cognitoMap = nPlugin.Aws["cognito"]
 			}
@@ -230,7 +233,7 @@ func AppPluginSiteBootstrap(lib acenteralib.SharedLib, c *gin.Context, reqObj ac
 
 			nPlugin.Graphql = appSettings.Graphql
 			GraphApiEndpoint := os.Getenv("GraphApiEndpoint")
-			if (GraphApiEndpoint != "") {
+			if GraphApiEndpoint != "" {
 				nPlugin.Graphql = map[string]string{}
 				nPlugin.Graphql["URL"] = GraphApiEndpoint
 				nPlugin.Graphql["REGION"] = os.Getenv("REGION")
@@ -354,4 +357,14 @@ func AppPluginSiteBootstrap(lib acenteralib.SharedLib, c *gin.Context, reqObj ac
 		StatusCode: 500,
 	}
 	return r, nil
+}
+
+func GetMe(sharedlib acenteralib.SharedLib, c *gin.Context, jwtSession jwt.Claims, reqObj acenteralib.RequestObject) (events.APIGatewayProxyResponse, error) {
+
+	in := reqObj
+	var inInterface map[string]interface{}
+	inrec, _ := json.Marshal(in)
+	json.Unmarshal(inrec, &inInterface)
+
+	return RestResponseNoCache(inInterface)
 }

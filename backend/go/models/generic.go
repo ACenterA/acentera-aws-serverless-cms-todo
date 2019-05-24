@@ -1,34 +1,127 @@
-package main
+package models
 
 import (
 	// "context"
 	// "github.com/aws/aws-lambda-go/lambda"
+	"log"
+
 	resolvers "github.com/sbstjn/appsync-resolvers"
 	// 	 "reflect"
 	"fmt"
 	"os"
-	// "plugin"
-	"github.com/pkg/errors"
+
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+
 	// "github.com/satori/go.uuid"
 	"github.com/acenteracms/acenteralib"
 
 	"encoding/base64"
 	"encoding/json"
 
+	pluralize "github.com/gertd/go-pluralize"
+
+	"io/ioutil"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+	"gopkg.in/yaml.v2"
 )
 
 // ID Is always a String
 // https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
 var (
-	SELF = "SELF"
+	SELF         = "SELF"
+	CustomModels = make(map[string]Models, 0)
 )
+
+type Models struct {
+	Version   int64           `yaml:"version"`
+	Generic   int64           `yaml:"generic"`
+	Parent    string          `yaml:"parent"`
+	Plurial   string          `yaml:"plurial"`
+	Singular  string          `yaml:"singular"`
+	ClassName string          `yaml:"class"`
+	Class     *GenericHandler `yaml:"-"`
+}
+
+type conf struct {
+	Models map[string]Models `yaml:"models"`
+}
+
+func (c *conf) getConf() *conf {
+
+	yamlFile, err := ioutil.ReadFile("conf.yaml")
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+	}
+	err = yaml.Unmarshal(yamlFile, c)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+
+	return c
+}
+
+func init() {
+}
+
+func (p GenericHandler) Initialize(r resolvers.Repository) error {
+
+	// genericHandler := GenericHandler{Awslambda: p.Awslambda, ElementType: ""}
+	// genericHandler.InitializeRoutes(r)
+
+	// projectHandler := ProjectHandler{gofaas.GenericHandler{Awslambda: Awslambda, ElementType: "PROJECT", ActionWord: "PROJECT"}}
+	// projectHandler.InitializeRoutes(r)
+
+	var c conf
+	yamlObjList := c.getConf()
+	fmt.Println(c)
+	for k, v := range yamlObjList.Models {
+		fmt.Println(" K :", k)
+		fmt.Println(" V :", v)
+
+		modelType := strings.ToLower(k)
+
+		ActionWord := v.Plurial
+		if v.Plurial == "" {
+			ActionWord = strings.Title(strings.ToLower(modelType))
+		}
+		ActionWordSingular := v.Singular
+		if ActionWordSingular == "" {
+			ActionWordSingular = strings.Title(strings.ToLower(pluralize.Singular(modelType)))
+		}
+
+		ActionWordPlurial := v.Plurial
+		if ActionWordPlurial == "" {
+			ActionWordPlurial = strings.Title(strings.ToLower(pluralize.Plural(modelType)))
+		}
+
+		fmt.Println("INIT OF ROUTES HERE for ", modelType)
+		customHandler := GenericHandler{Awslambda: p.Awslambda, Models: v, ElementType: modelType, ActionWord: ActionWord, ActionWordSingular: ActionWordSingular, ActionWordPlurial: ActionWordPlurial}
+		customHandler.InitializeRoutes(r)
+	}
+	/*
+		projectHandler := GenericHandler{Awslambda: p.Awslambda, ElementType: "PROJECT"}
+		projectHandler.InitializeRoutes(r)
+
+		taskHandler := GenericHandler{Awslambda: p.Awslambda, ElementType: "TASKS"}
+		taskHandler.InitializeRoutes(r)
+
+		postsHandler := GenericHandler{Awslambda: p.Awslambda, ElementType: "POSTS", ActionWord: "Posts"}
+		postsHandler.InitializeRoutes(r)
+	*/
+	fmt.Println("INITIALIZEED ROUTES S")
+
+	// postHandler := PostHandler{gofaas.GenericHandler{Awslambda: Awslambda, ElementType: "POSTS", ActionWord: "Posts"}}
+	// postHandler.InitializeRoutes(r)
+	return nil
+}
 
 type createInputEvent struct {
 	Input  map[string]interface{} `json:"input"`
@@ -78,7 +171,7 @@ type Task struct {
 }
 */
 
-func (p GenericHandler) handleDeleteGeneric(reqObj *acenteralib.RequestObject, identity map[string]interface{}, event deleteInputEvent) (*map[string]interface{}, error) {
+func (p GenericHandler) HandleDeleteGeneric(reqObj *acenteralib.RequestObject, identity map[string]interface{}, event deleteInputEvent) (*map[string]interface{}, error) {
 	// TODO: Add Security using the reqObj.User / Roles ... or the reqObj.Session
 
 	elementType := p.ElementType
@@ -86,7 +179,7 @@ func (p GenericHandler) handleDeleteGeneric(reqObj *acenteralib.RequestObject, i
 		elementType = event.Type
 	}
 
-	inactiveGSK := Awslambda.GenerateSortKeyWithTS(fmt.Sprintf("deleted#%s", elementType), "#")
+	inactiveGSK := p.Awslambda.GenerateSortKeyWithTS(fmt.Sprintf("deleted#%s", elementType), "#")
 	activeOldSortKey := fmt.Sprintf("active#%s#", elementType)
 
 	output, err := acenteralib.DynamoDB.UpdateItem(&dynamodb.UpdateItemInput{
@@ -106,7 +199,7 @@ func (p GenericHandler) handleDeleteGeneric(reqObj *acenteralib.RequestObject, i
 			":gsk": &dynamodb.AttributeValue{
 				S: aws.String(inactiveGSK),
 			},
-			":activeInfo": &dynamodb.AttributeValue{
+			":activeGskInfo": &dynamodb.AttributeValue{
 				S: aws.String(activeOldSortKey),
 			},
 		},
@@ -114,7 +207,7 @@ func (p GenericHandler) handleDeleteGeneric(reqObj *acenteralib.RequestObject, i
 			"#status": aws.String("status"),
 			"#gsk":    aws.String("gsk"),
 		},
-		ConditionExpression: aws.String("begins_with(gsk, :activeInfo)"),
+		ConditionExpression: aws.String("begins_with(gsk, :activeGskInfo)"),
 		ReturnValues:        aws.String("ALL_NEW"),
 		TableName:           aws.String(os.Getenv("APP_DATA_TABLE_NAME")),
 	})
@@ -139,7 +232,7 @@ func (p GenericHandler) handleDeleteGeneric(reqObj *acenteralib.RequestObject, i
 	return &item, err
 }
 
-func (p GenericHandler) handleUpdateGeneric(reqObj *acenteralib.RequestObject, identity map[string]interface{}, event updateInputEvent) (*map[string]interface{}, error) {
+func (p GenericHandler) HandleUpdateGeneric(reqObj *acenteralib.RequestObject, identity map[string]interface{}, event updateInputEvent) (*map[string]interface{}, error) {
 
 	// TODO: Add Security using the reqObj.User / Roles ... or the reqObj.Session
 	timeUtc := time.Now().UTC()
@@ -187,7 +280,6 @@ func (p GenericHandler) handleUpdateGeneric(reqObj *acenteralib.RequestObject, i
 		}
 	}
 	if hasSk <= -1 {
-		fmt.Println("NO SK..")
 		nameLower := expression.Name("sk")
 		value := expression.Value(sortKey)
 		proj = expression.AddNames(proj, nameLower)
@@ -247,9 +339,8 @@ func (p GenericHandler) handleUpdateGeneric(reqObj *acenteralib.RequestObject, i
 
 }
 
-func (p GenericHandler) handleListAll(reqObj *acenteralib.RequestObject, identity map[string]interface{}) (*PaginatedGeneric, error) {
+func (p GenericHandler) HandleListAll(reqObj *acenteralib.RequestObject, identity map[string]interface{}) (*PaginatedGeneric, error) {
 	// TODO ADD SECURITY
-
 	// Element Type ?
 	queryInput := listPaginatedGenericInput{
 		Limit: 100,
@@ -265,7 +356,7 @@ func (p GenericHandler) handleListAll(reqObj *acenteralib.RequestObject, identit
 	var err error
 	for {
 		queryInput.NextToken = lastResult.NextToken
-		lastResult, err = p.handleList(reqObj, identity, queryInput)
+		lastResult, err = p.HandleList(reqObj, identity, queryInput)
 		lastResult.NextToken = lastResult.NextToken
 		output.Items = append(output.Items, lastResult.Items...)
 		if lastResult.NextToken == "" {
@@ -275,7 +366,7 @@ func (p GenericHandler) handleListAll(reqObj *acenteralib.RequestObject, identit
 	return output, err
 }
 
-func (p GenericHandler) handleList(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input listPaginatedGenericInput) (*PaginatedGeneric, error) {
+func (p GenericHandler) HandleList(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input listPaginatedGenericInput) (*PaginatedGeneric, error) {
 
 	elementType := p.ElementType
 	if elementType == "" {
@@ -367,9 +458,10 @@ func (p GenericHandler) handleList(reqObj *acenteralib.RequestObject, identity m
 	return &output, err
 }
 
-func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, identity map[string]interface{}, mutation createInputEvent) (*map[string]interface{}, error) {
-
+func (p GenericHandler) HandleCreateGeneric(reqObj *acenteralib.RequestObject, identity map[string]interface{}, mutation createInputEvent) (*map[string]interface{}, error) {
 	// TODO: Create if user is Admin
+
+	fmt.Println("Create Generic ...")
 
 	elementType := p.ElementType
 	if elementType == "" {
@@ -378,252 +470,209 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 
 	taskName := mutation.Input["title"].(string)
 	site := os.Getenv("SITE")
-	fmt.Println("Will be Creating ", elementType, " .. title :", taskName)
 
 	parent := "" // os.Getenv("SITE")
 	if mutation.Parent != nil {
-		fmt.Println("1 - Will be Creating ", elementType, " .. title :", taskName)
 		if val, ok := mutation.Parent["value"]; ok {
 			parent = val.(string)
 		}
 	}
-	fmt.Println("2- Will be Creating ", elementType, " .. title :", taskName)
 	var dynamoPutInput dynamodb.PutItemInput
+	// if no parents defined in request ...
 	if parent == "" {
-		dynamoPutInput = *Awslambda.CreateAppItemParent(taskName, elementType, site, "") // leave default sitei and sort key of active#ELEMENTTYPE#TS
-	} else {
-		dynamoPutInput = *Awslambda.CreateAppItemParentAndPlugin(taskName, elementType, parent, "", site, "") // leave default sitei and sort key of active#ElementTypetTT#TS
+		if p.Models.Parent != "" {
+			if val, ok := mutation.Input[p.Models.Parent]; ok {
+				parent = val.(string)
+			}
+		}
 	}
-	fmt.Println("3- Will be Creating ", elementType, " .. title :", taskName)
-
-	// keyCond represents the Key Condition Expression
-	// pKeyCond := expression.Key("id").Equal(expression.Value(event.Input["id"])) // "someValue"))
-	// keyCond := expression.KeyAnd(expression.Key("id").Equal(expression.Value(strings.ToLower(mutation.Input["id"].(string)))), expression.Key("sk").Equal(expression.Value(sortKey))) // event.Input["sk"])) // sortKey or type?
+	if parent == "" {
+		dynamoPutInput = *p.Awslambda.CreateAppItemParent(taskName, elementType, site, "") // leave default sitei and sort key of active#ELEMENTTYPE#TS
+	} else {
+		dynamoPutInput = *p.Awslambda.CreateAppItemParentAndPlugin(taskName, elementType, parent, "", site, "") // leave default sitei and sort key of active#ElementTypetTT#TS
+	}
 
 	// proj represents the Projection Expression
-	fmt.Println("4- Will be Creating ", elementType, " .. title :", taskName)
 	proj := expression.ProjectionBuilder{} // NamesList() //expression.Name("aName"), expression.Name("anotherName"), expression.Name("oneOtherName"))
 	update := expression.UpdateBuilder{}
 
-	fmt.Println("5- Will be Creating ", elementType, " .. title :", taskName)
 	attributes := map[string]*dynamodb.AttributeValue{}
-	/*
-		  ":e_mail": &dynamodb.AttributeValue{
-		        S: &user.Email,
-		    },
-			}
-	*/
 
-	/*
-		for k, v := range m {
-			rt := reflect.TypeOf(v)
-			switch rt.Kind() {
-			case reflect.Slice:
-				fmt.Println(k, "is a slice with element type", rt.Elem())
-			case reflect.Array:
-				fmt.Println(k, "is an array with element type", rt.Elem())
-			case reflect.String:
-				fmt.Println(k, "is an strirng with element type")
-			case reflect.Map:
-				fmt.Println(k, "is an map with element type")
-			case reflect.Bool:
-				fmt.Println(k, "is an BOOL with element type")
-			default:
-				fmt.Println(k, "is something else entirely", rt.Kind())
-			}
-		}
-	*/
-
-	fmt.Println("6- Will be Creating ", elementType, " .. title :", taskName)
-
-	// This include the Generated dUUID?
-	/*uuid := ""
-	sk := sortKey
-	for k, attr := range dynamoPutInput.Item {
-		if (k == "id") {
-			uuid = *attr.S
-		}
-		if (k == "sk") {
-			sk = *attr.S
-		}
-		attributes[k] = attr
-	}
-	*/
+	// will add USERID / `type`#last-modified-date so we can query liike
+	// Get latest created `type` (ie: tasks) for a user...
+	fmt.Println(reqObj.Session)
+	mutation.Input["upk"] = reqObj.Session.Userid
 
 	// Override any values including sk if user wants it ...
+	exisingKeys := make(map[string]*dynamodb.AttributeValue, 0)
+	for lowerNameKey, attr := range dynamoPutInput.Item {
+		exisingKeys[lowerNameKey] = attr
+		if lowerNameKey == "id" || lowerNameKey == "sk" {
+			// do not ad it to the update expressions
+		} else {
+			nameLower := expression.Name(lowerNameKey)
+			fmt.Println("Adding of ", nameLower)
+
+			// var actual *interface{}
+			// err := dynamodbattribute.Unmarshal(value, &actual)
+			// fmt.Println(err)
+			fmt.Println(attr)
+			fmt.Println("S is :")
+			proj = expression.AddNames(proj, nameLower)
+
+			value := expression.Value("")
+			if attr.S != nil {
+				value = expression.Value(attr.S)
+			} else if attr.N != nil {
+				value = expression.Value(attr.N)
+			} else if attr.B != nil {
+				value = expression.Value(attr.B)
+			} else if attr.BOOL != nil {
+				value = expression.Value(attr.BOOL)
+			} else if attr.BS != nil {
+				value = expression.Value(attr.BS)
+			} else if attr.L != nil {
+				value = expression.Value(attr.L)
+			} else if attr.M != nil {
+				value = expression.Value(attr.M)
+			} else if attr.NS != nil {
+				value = expression.Value(attr.NS)
+			} else if attr.NULL != nil {
+				value = expression.Value(attr.NULL)
+			} else if attr.SS != nil {
+				value = expression.Value(attr.SS)
+			}
+			update = update.Set(nameLower, value)
+
+		}
+	}
 	for k, v := range mutation.Input {
 		lowerNameKey := strings.ToLower(k)
-		nameLower := expression.Name(lowerNameKey)
-		fmt.Println("7- Will be Creating ", elementType, " .. title :", taskName)
-		value := expression.Value(v)
-
-		// objType := 0
-		// rt := reflect.TypeOf(v)
-
-		// var attrType dynamodb.AttributeValue
-
-		attrB, err := dynamodbattribute.Marshal(v)
-		// fmt.Println("GOT ERR - 1")
-		if err != nil {
-			fmt.Println(err)
+		fmt.Println("Check of  :", lowerNameKey)
+		if _, ok := exisingKeys[lowerNameKey]; ok {
+			// Already exists do not re-add
+		} else {
+			nameLower := expression.Name(lowerNameKey)
+			fmt.Println("Adding of ", nameLower)
+			value := expression.Value(v)
+			attrB, _ := dynamodbattribute.Marshal(v)
+			attributes[lowerNameKey] = attrB
+			dynamoPutInput.Item[lowerNameKey] = attrB
+			proj = expression.AddNames(proj, nameLower)
+			update = update.Set(nameLower, value)
+			fmt.Println("Adding done..")
 		}
-		attributes[lowerNameKey] = attrB
-		dynamoPutInput.Item[lowerNameKey] = attrB
-		/*&dynamodb.AttributeValue{
-			SS: v.([]string)value.Value,
-		}*/
-
-		/*
-			switch rt.Kind() {
-			case reflect.Slice:
-				// SS
-				objType = 1
-				// fmt.Println(k, "is a slice with element type", rt.Elem())
-				if (strings.HasPrefix(rt.Elem().String(), "string")) {
-					attrB, err := dynamodbattribute.Marshal(v)
-					fmt.Println("GOT ERR - 1")
-					fmt.Prinrtln(err)
-					attributes[lowerNameKey] = attributes
-					&dynamodb.AttributeValue{
-						SS:??
-					}
-					// attrType = dynamodb.AttributeValue.SS
-				} else if (strings.HasPrefix(rt.Elem().String(), "byte")) {
-					attrType = dynamodb.AttributeValue.BS
-				} else if (strings.HasPrefix(rt.Elem().String(), "bool") || strings.HasPrefix(rt.Elem().String(), "BOOL")) {
-					// ??? attrType =
-					attrType = dynamodb.AttributeValue.L
-				} else {
-					attrType = dynamodb.AttributeValue.NS
-				}
-			case reflect.Array:
-				objType = 1
-				// fmt.Println(k, "is an array with element type", rt.Elem())
-				if (strings.HasPrefix(rt.Elem().String(), "string")) {
-					attrType = dynamodb.AttributeValue.SS
-				} else if (strings.HasPrefix(rt.Elem().String(), "byte")) {
-					attrType = BS
-				} else if (strings.HasPrefix(rt.Elem().String(), "bool") || strings.HasPrefix(rt.Elem().String(), "BOOL")) {
-					// ??? attrType = dynamodb.AttributeValue.NB
-				} else {
-					attrType = NS
-				}
-			case reflect.String:
-				// fmt.Println(k, "is an strirng with element type")
-				objType = 2
-				attrType = S
-			case reflect.Map:
-				// fmt.Println(k, "is an map with element type")
-				objType = 3
-				attrType = M
-			case reflect.Bool:
-				objType = 4
-				// fmt.Println(k, "is an BOOL with element type")
-				attrType = BOOL
-			case reflect.Byte:
-				objType = 4
-				// fmt.Println(k, "is an BOOL with element type")
-				attrType = B
-			default:
-				fmt.Println(k, "is something else entirely", rt.Kind())
-				if (strings.HasPrefix(rt.Kind(),"int") || strings.HasPrefix(rt.Kind(),"float")) {
-					objType = 5
-				} else {
-					objType = 2
-				}
-			}
-		*/
-		proj = expression.AddNames(proj, nameLower)
-		update = update.Set(nameLower, value)
 	}
-
-	fmt.Println("8- Will be Creating ", elementType, " .. title :", taskName)
-
+	fmt.Println("Ok Done..")
 	condUpdateCond := expression.And(expression.AttributeNotExists(expression.Name("id")), expression.AttributeNotExists(expression.Name("sk"))) // event.Input["sk"])) // sortKey or type?
-	// builder := expression.NewBuilder().WithKeyCondition(keyCond).WithProjection(proj).WithCondition(condUpdateCond).WithUpdate(update)
-	// builder := expression.NewBuilder().WithKeyCondition(keyCond).WithCondition(condUpdateCond).WithUpdate(update)
-	fmt.Println("9- Will be Creating ", elementType, " .. title :", taskName)
-	fmt.Println("Condupdate is ")
-	fmt.Println(condUpdateCond)
-	fmt.Println("Update is ")
-	fmt.Println(update)
 	builder := expression.NewBuilder().WithCondition(condUpdateCond).WithUpdate(update)
 	exp, err := builder.Build()
-	// update := expression.UpdateBuilder{}
-	fmt.Println(err)
-	fmt.Println(exp)
 
-	/*
-		if (uuid == "") {
-			uuid = UUIDGen().String()
-		}
-	*/
-	/*
-		dynamoDdbUpdateInput := &dynamodb.UpdateItemInput{
-			Key: map[string]*dynamodb.AttributeValue{
-				"id": &dynamodb.AttributeValue{
-					S: aws.String(uuid), // mutation.Input["id"].(string)),
-				},
-				"sk": &dynamodb.AttributeValue{
-					S: aws.String(sk),
-				},
-			},
-			// Key:  										 exp.KeyCondition(),
-			ExpressionAttributeNames:  exp.Names(),
-			ExpressionAttributeValues: exp.Values(),
-			UpdateExpression:          exp.Update(),
-			ConditionExpression:  		 exp.Condition(),
-			ReturnValues: aws.String("ALL_NEW"),
-			TableName: aws.String(os.Getenv("APP_DATA_TABLE_NAME")),
-		}
-	*/
-	// output, errPut := acenteralib.DynamoDB.UpdateItem(dynamoDdbUpdateInput)
-
-	fmt.Println("Put item using.....")
-	// fmt.Println(dynamoDdbUpdateInput)
-	fmt.Println(dynamoPutInput)
-
-	output, errPut := acenteralib.DynamoDB.PutItem(&dynamoPutInput)
-
-	fmt.Println("Outpout is :")
-	fmt.Println(output)
-
-	var item map[string]interface{}
-	fmt.Println("ERRR IS")
-	fmt.Println(errPut)
-	if errPut == nil {
-		// fmt.Println(out.Attributes)
-		errPut = dynamodbattribute.UnmarshalMap(dynamoPutInput.Item, &item) // output.Attributes, &item) // dynamoPutInput.Item, &item)
+	dynamoDdbUpdateInput := &dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": dynamoPutInput.Item["id"],
+			"sk": dynamoPutInput.Item["sk"],
+		},
+		ExpressionAttributeNames:  exp.Names(),
+		ExpressionAttributeValues: exp.Values(),
+		UpdateExpression:          exp.Update(),
+		ConditionExpression:       exp.Condition(),
+		ReturnValues:              aws.String("ALL_NEW"),
+		TableName:                 aws.String(os.Getenv("APP_DATA_TABLE_NAME")),
 	}
-	// fmt.Println("Would returm item of ")
-	fmt.Println(item)
-	fmt.Println("ERR put ..")
-	fmt.Println(errPut)
-	return &item, errPut
+	// fmt.Println(exp.Update())
+
+	output, err := acenteralib.DynamoDB.UpdateItem(dynamoDdbUpdateInput)
+	fmt.Println(output)
+	fmt.Println(err)
+	if err != nil {
+		fmt.Println(err)
+		if ae, ok := err.(awserr.RequestFailure); ok && ae.Code() == "ConditionalCheckFailedException" {
+			//fmt.Println("Update failed due to constraint...")
+			return nil, errors.WithStack(err)
+		}
+		return nil, errors.WithStack(err)
+	}
+
+	// do not use put items..
+	var item map[string]interface{}
+	if err == nil {
+		err = dynamodbattribute.UnmarshalMap(output.Attributes, &item)
+	}
+
+	// TODO: Ned to return a UserPost Connection...
+	return &item, err
+
+	/*
+		fmt.Println("Put item using.....")
+		// fmt.Println(dynamoDdbUpdateInput)
+		fmt.Println(dynamoPutInput)
+
+		output, errPut := acenteralib.DynamoDB.PutItem(&dynamoPutInput)
+
+		fmt.Println("Outpout is :")
+		fmt.Println(output)
+
+		var item map[string]interface{}
+		fmt.Println("ERRR IS")
+		fmt.Println(errPut)
+		if errPut == nil {
+			// fmt.Println(out.Attributes)
+			errPut = dynamodbattribute.UnmarshalMap(dynamoPutInput.Item, &item) // output.Attributes, &item) // dynamoPutInput.Item, &item)
+		}
+		// fmt.Println("Would returm item of ")
+		fmt.Println(item)
+		fmt.Println("ERR put ..")
+		fmt.Println(errPut)
+		return &item, errPut
+	*/
 }
 
 type GenericHandler struct {
-	ElementType string
+	Awslambda          acenteralib.SharedLib
+	Models             Models
+	InitHandler        func(r resolvers.Repository) error
+	ElementType        string
+	ActionWord         string
+	ActionWordSingular string
+	ActionWordPlurial  string
 }
 
 func (p GenericHandler) InitializeRoutes(r resolvers.Repository) error {
 	var err error
-
-	if p.ElementType == "" {
-		err = r.Add(fmt.Sprintf("query.list"), p.handleList)
-		err = r.Add(fmt.Sprintf("query.listAll"), p.handleListAll)
-		err = r.Add(fmt.Sprintf("mutation.create"), p.handleCreateGeneric)
-		err = r.Add(fmt.Sprintf("mutation.update"), p.handleUpdateGeneric)
-		err = r.Add(fmt.Sprintf("mutation.delete"), p.handleDeleteGeneric)
+	fmt.Println("TEST HERE  ", p.InitHandler)
+	if p.InitHandler != nil {
+		err = p.InitHandler(r)
 	} else {
-		ActionWord := strings.Title(strings.ToLower(p.ElementType))
-		err = r.Add(fmt.Sprintf("query.list%s", ActionWord), p.handleList)
-		err = r.Add(fmt.Sprintf("query.list%ss", ActionWord), p.handleList) // plurial?
-		err = r.Add(fmt.Sprintf("query.listAll%s", ActionWord), p.handleListAll)
-		err = r.Add(fmt.Sprintf("query.listAll%ss", ActionWord), p.handleListAll) // plurial
-		err = r.Add(fmt.Sprintf("mutation.create%s", ActionWord), p.handleCreateGeneric)
-		err = r.Add(fmt.Sprintf("mutation.update%s", ActionWord), p.handleUpdateGeneric)
-		err = r.Add(fmt.Sprintf("mutation.delete%s", ActionWord), p.handleDeleteGeneric)
+		fmt.Println("TEST HERE  B ", p.ElementType)
+		if p.ElementType == "" {
+			// this is impossible... elementytpe is requirred
+			err = r.Add(fmt.Sprintf("query.list"), p.HandleList)
+			err = r.Add(fmt.Sprintf("query.listAll"), p.HandleListAll)
+			err = r.Add(fmt.Sprintf("mutation.create"), p.HandleCreateGeneric)
+			err = r.Add(fmt.Sprintf("mutation.update"), p.HandleUpdateGeneric)
+			err = r.Add(fmt.Sprintf("mutation.delete"), p.HandleDeleteGeneric)
+		} else {
+			if p.Models.Version == 1 {
+				fmt.Println("GraphQL Adding :", fmt.Sprintf("query.list%s", p.ActionWordPlurial))
+				err = r.Add(fmt.Sprintf("query.list%s", p.ActionWordPlurial), p.HandleList) // query.listPosts(listInput) with nextTokens
+
+				fmt.Println("GraphQL Adding :", fmt.Sprintf("query.%s", strings.ToLower(p.ActionWordPlurial)))
+				err = r.Add(fmt.Sprintf("query.%s", strings.ToLower(p.ActionWordPlurial)), p.HandleList) // query.posts(listInput)
+
+				// err = r.Add(fmt.Sprintf("query.batchget%s", p.ActionWordPlurial), p.HandleBatchGet)
+				// err = r.Add(fmt.Sprintf("query.%s", strings.ToLower(p.ActionWordSingular)), p.HandleGetGeneric)			 // query.post(id=x)
+
+				fmt.Println("GraphQL Adding :", fmt.Sprintf("query.listAll%s", p.ActionWordPlurial))
+				err = r.Add(fmt.Sprintf("query.listAll%s", p.ActionWordPlurial), p.HandleListAll) // listAllPosts (no paging)
+				// err = r.Add(fmt.Sprintf("query.listAll%ss", ActionWord), p.HandleListAll) // plurial
+
+				fmt.Println("GraphQL Adding CRUDS for :", fmt.Sprintf("mutation.[create|update|delete|%s", p.ActionWordSingular))
+				err = r.Add(fmt.Sprintf("mutation.create%s", p.ActionWordSingular), p.HandleCreateGeneric)
+				err = r.Add(fmt.Sprintf("mutation.update%s", p.ActionWordSingular), p.HandleUpdateGeneric)
+				err = r.Add(fmt.Sprintf("mutation.delete%s", p.ActionWordSingular), p.HandleDeleteGeneric)
+			}
+		}
 	}
 	return err
 }

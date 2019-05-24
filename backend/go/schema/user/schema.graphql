@@ -1,0 +1,18 @@
+
+type UserPublic {
+  id: ID!
+  title: String!
+}
+
+type Query {
+  getUserPublicInfo(input: ID!): UserPublic
+  batchgetUserPublicInfo(input: [ID]!): [UserPublic]!
+}
+
+type User {
+  id: ID!
+  posts(limit: Int, type: UserPostConnectionType, nextToken: String): UserPostConnection
+  profilePicture: S3Object
+  created: AWSDateTime
+  updated: AWSDateTime
+}

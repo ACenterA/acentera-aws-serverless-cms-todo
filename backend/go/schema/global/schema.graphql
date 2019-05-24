@@ -1,0 +1,17 @@
+input S3ObjectInput {
+  bucket: String!
+  key: String!
+  region: String!
+}
+
+type S3Object {
+  bucket: String
+  key: String
+  region: String
+}
+
+enum LangEnum {
+    fr
+    en
+}
+

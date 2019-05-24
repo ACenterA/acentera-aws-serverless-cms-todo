@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"plugin"
 
@@ -13,7 +12,8 @@ import (
 	"github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/myplugin/gofaas"
-	"github.com/satori/go.uuid"
+	models "github.com/myplugin/gofaas/models"
+	uuid "github.com/satori/go.uuid"
 	resolvers "github.com/sbstjn/appsync-resolvers"
 )
 
@@ -46,29 +46,39 @@ func init() {
 	filter, err := GetFilter.(func() (acenteralib.SharedLib, error))()
 	Awslambda = filter
 
-	genericHandler := GenericHandler{ElementType: ""}
-	genericHandler.InitializeRoutes(r)
+	genHandlerObject := &models.GenericHandler{Awslambda: Awslambda}
+	genHandlerObject.Initialize(r)
 
-	projectHandler := GenericHandler{ElementType: "PROJECT"}
-	projectHandler.InitializeRoutes(r)
+	/*
+		genericHandler := models.GenericHandler{Awslambda: Awslambda, ElementType: ""}
 
-	taskHandler := GenericHandler{ElementType: "TASKS"}
-	taskHandler.InitializeRoutes(r)
+		genericHandler := models.GenericHandler{Awslambda: Awslambda, ElementType: ""}
+		genericHandler.InitializeRoutes(r)
 
-	postHandler := GenericHandler{ElementType: "POSTS"}
-	postHandler.InitializeRoutes(r)
+		// projectHandler := ProjectHandler{gofaas.GenericHandler{Awslambda: Awslambda, ElementType: "PROJECT", ActionWord: "PROJECT"}}
+		// projectHandler.InitializeRoutes(r)
+
+		taskHandler := models.GenericHandler{ElementType: "TASKS"}
+		taskHandler.InitializeRoutes(r)
+
+		// postHandler := PostHandler{gofaas.GenericHandler{Awslambda: Awslambda, ElementType: "POSTS", ActionWord: "Posts"}}
+		// postHandler.InitializeRoutes(r)
+	*/
 }
 
 func Handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	if ginLambda == nil {
-		log.Printf("Gin cold start")
 		// stdout and stderr are sent to AWS CloudWatch Logs
 		r := gin.Default()
-		r.POST("/api/plugins/serverless-cms/setup/bootstrap", Awslambda.PluginNotifyAPIGateway(gofaas.AppPluginSiteBootstrap))
-		r.GET("/api/plugins/serverless-cms/settings", Awslambda.PluginNotifyAPIGateway(gofaas.GetSettings))
-		// r.GET("/pets/:id", getPet)
-		// r.POST("/pets", createPet)
+
+		// REST API Queries here
+		r.POST(fmt.Sprintf("/api/plugins/%s/setup/bootstrap", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.AppPluginSiteBootstrap))
+		r.GET(fmt.Sprintf("/api/plugins/%s/settings", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.GetSettings))
+
+		// Add any others
+		// authenticated ones are, examle
+		r.GET(fmt.Sprintf("/api/plugins/%s/me", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGatewayJWTSecured(gofaas.GetMe))
 
 		ginLambda = ginadapter.New(r)
 	}

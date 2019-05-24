@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="filter-container">
       <el-input :placeholder="$t('table.title')" v-model="listQuery.title" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter"/>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
+      <el-button v-if="allowCreate" class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
     </div>
 
     <el-table
@@ -90,10 +90,13 @@ export default {
       return statusMap[status]
     }
   },
-  /*
   props: {
+    'allowCreate': {
+      required: true,
+      type: Boolean,
+      default: true
+    }
   },
-  */
   data() {
     return {
       tableKey: 0,

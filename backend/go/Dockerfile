@@ -5,19 +5,10 @@ FROM acentera/prod:golang-base-compile-0.0.2
 
 RUN pip install yq
 # RUN apk add --no-cache git
+RUN go get -u github.com/gertd/go-pluralize
+RUN go get -u github.com/jinzhu/copier
+RUN go get -u github.com/ACenterA/gqlmerge
 
-# RUN cd /tmp && \
-#     git clone 'https://github.com/stedolan/jq.git' && \
-#     sudo -i apt update && \
-#     sudo -i apt-get -y install autoconf && \
-#     sudo -i apt-get -y install libtool && \
-#     sudo -i pip install pipenv && \
-#     sudo -i pip install yq && \
-#     sudo -i apt-get -y install jq
-# RUN apk add --no-cache jq
-#  yq
-
-# RUN go get github.com/mitchellh/mapstructure
 RUN mkdir -p /go/src/github.com/myplugin/gofaas
 RUN mkdir -p /go/src/github.com/acenteracms/acentralib
 WORKDIR /go/src/github.com/myplugin/gofaas

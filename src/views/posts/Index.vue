@@ -1,7 +1,8 @@
 <template>
   <div v-if="!isLoading" class="minvh">
     <div v-if="!projectid">
-      <list-projects/>
+      Select a Project
+      <list-projects :allow-create="false"/>
     </div>
     <div v-else>
       <list-posts v-if="projectid" :project="projectid"/>

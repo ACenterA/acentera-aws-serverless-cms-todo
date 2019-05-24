@@ -1,0 +1,154 @@
+type UserPost {
+  post: Post!
+  user: User!
+}
+
+type UserPostConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [Post]!
+  lang: LangEnum
+  nextToken: String
+}
+
+input CreatePostInput {
+  project: String!
+  lang: String
+  author: String
+  title: String
+  content: String
+  description: String
+}
+
+input UpdatePostInput {
+  id: ID!
+  title: String
+  completed: Boolean
+}
+
+input DeletePostInput {
+  id: ID!
+}
+
+type Mutation {
+  createPost(input: CreatePostInput!): CreatePostOutput
+  updatePost(input: UpdatePostInput!): Post
+  deletePost(input: DeletePostInput!): Post
+}
+
+type CreatePostOutput {
+  userPost: UserPost
+  query: Query
+}
+
+type Query {
+  getPost(id: ID!): Post
+
+  # listPosts should return a PostConnection that ony have a userId (prevent N+1 Loops)
+  listPosts(project: String, lang: LangEnum, limit: Int, nextToken: String): PostConnection!
+}
+
+### POSTS
+# Get next scheduled posts ... to proceed
+# Get Latest Posts by Type ( published, scheduled, draft ..)
+# For a User get the Posts that he has ( Created, Interacted, Viewed )
+#
+
+enum UserPostConnectionType {
+    created
+    interacted
+    viewed
+}
+
+enum PostStatusType {
+    published
+    draft
+    scheduled
+}
+
+# what about languages?
+interface PostInterface {
+  id: ID!
+  title: String!
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+# PostListing should not have N+1 Queries ...
+type PostListing implements PostInterface {
+  id: ID!
+  title: String!
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime  
+}
+
+type Post implements PostInterface {
+  id: ID!
+  title: String!
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+  languages: [LangEnum]!
+  translations(lang: LangEnum): PostMetadataConnection
+  comments(lang: LangEnum, limit: Int, nextToken: String): PostCommentConnection
+  categories: [String]
+  tags: [String]
+  views: Int
+  author: User!
+}
+
+type PostMetadataConnection {
+  id: ID!
+  title: String!
+  slug: String!
+  content: String!
+  description: String!
+  status: String!
+  published: AWSDateTime
+  views: Int
+}
+
+type Comment {
+  id: ID!
+  postId: String!
+  lang: LangEnum!
+  author: String!
+  content: String!
+  upvotes: Int
+  downvotes: Int
+}
+
+type PostCommentConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [Comment]!
+  nextToken: String
+}
+
+type Category {
+  id: ID!
+  title: String!
+  status: String!
+  completed: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+  categories: [String]!
+}
+
+# Return a PostListing limit N+1 Queries
+type PostConnection {
+  items: [PostListing!]!
+  nextToken: String
+}
+
+type Subscription {
+  onCreatePost(id: ID, title: String, completed: Boolean): CreatePostOutput
+  onUpdatePost(id: ID, title: String, completed: Boolean): PostInterface
+  onDeletePost(id: ID, title: String, completed: Boolean): PostInterface
+}

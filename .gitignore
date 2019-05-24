@@ -83,3 +83,4 @@ backend/go/shared/
 .aws.*
 /go/
 ./backend/go/sam-package.sh
+backend/schema.graphql

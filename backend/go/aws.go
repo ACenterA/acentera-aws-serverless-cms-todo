@@ -2,9 +2,11 @@ package gofaas
 
 import (
 	"context"
+	"os"
+
 	"github.com/aws/aws-lambda-go/events"
 	jwt "github.com/dgrijalva/jwt-go"
-	"os"
+
 	// "github.com/aws/aws-lambda-go/cfn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -33,9 +35,17 @@ func getStageFromEnv() string {
 	return s
 }
 
+func getPluginNameFromEnv() string {
+	s := os.Getenv("PLUGIN_NAME")
+	if s == "" {
+		return "undefined"
+	}
+	return s
+}
+
 var (
 	PluginVersion = "0.0.1"
-	PLUGIN_NAME   = "ecseks"
+	PLUGIN_NAME   = getPluginNameFromEnv()
 	Stage         = getStageFromEnv()
 )
 

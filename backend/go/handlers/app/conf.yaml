@@ -1,0 +1,16 @@
+models:
+  tasks:
+    version: 1
+    plurial: Tasks
+    singular: task
+
+  posts:
+    version: 1
+    parent: project
+    # plurial: Posts
+    # singular: post
+
+  projects:
+    version: 1
+    # plurial: Tasks
+    # singular: task

@@ -63,8 +63,9 @@ services:
       - APP_DATA_TABLE_NAME=app-data
       - APP_DATA_PERM_TABLE_NAME=app-data-permissions
       - SESSION_TABLE_NAME=app-data-sessions
-      - PLUGINNAME=serverless-cms
-      - PluginName=serverless-cms
+      - PLUGINNAME=${PLUGIN_NAME}
+      - PLUGIN_NAME
+      - PluginName=${PLUGIN_NAME}
       - KEY_ID=a3A8Kaz#$$1kJ#$$1!
       - JWT_SECRET=docker-compose-secret
       - AWS_ACCESS_KEY_ID
