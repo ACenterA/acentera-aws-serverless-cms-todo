@@ -14,6 +14,13 @@ type Query {
   ): PostConnection!
   listAllProjects: ProjectConnection!
   listProjects(limit: Int, nextToken: String): ProjectConnection!
+  getTask(id: ID!): Tasks
+  listTasks(
+    project: String
+    lang: LangEnum
+    limit: Int
+    nextToken: String
+  ): TasksConnection!
   getUserPublicInfo(input: ID!): UserPublic
   batchgetUserPublicInfo(input: [ID]!): [UserPublic]!
 }
@@ -25,6 +32,9 @@ type Mutation {
   createProject(input: CreateProjectInput!): Project
   updateProject(input: UpdateProjectInput!): Project
   deleteProject(input: DeleteProjectInput!): Project
+  createTasks(input: CreateTaskInput!): CreateTasksOutput
+  updateTasks(input: UpdateTaskInput!): Tasks
+  deleteTasks(input: DeleteTaskInput!): Tasks
 }
 
 type Subscription {
@@ -37,12 +47,12 @@ type Subscription {
     id: ID
     title: String
     completed: Boolean
-  ): Post
+  ): PostInterface
   onDeletePost(
     id: ID
     title: String
     completed: Boolean
-  ): Post
+  ): PostInterface
   onCreateProject(
     id: ID
     title: String
@@ -58,6 +68,42 @@ type Subscription {
     title: String
     status: String
   ): Project
+  onCreateTasks(
+    id: ID
+    title: String
+    completed: Boolean
+  ): CreateTasksOutput
+  onUpdateTasks(
+    id: ID
+    title: String
+    completed: Boolean
+  ): TasksInterface
+  onDeleteTasks(
+    id: ID
+    title: String
+    completed: Boolean
+  ): TasksInterface
+}
+
+type S3Object {
+  bucket: String
+  key: String
+  region: String
+}
+
+type UserPost {
+  post: Post!
+  user: User!
+}
+
+type UserPostConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [Post]!
+  lang: LangEnum
+  nextToken: String
 }
 
 type CreatePostOutput {
@@ -65,10 +111,18 @@ type CreatePostOutput {
   query: Query
 }
 
-type Post {
+type PostListing implements PostInterface {
   id: ID!
   title: String!
-  author: String!
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+type Post implements PostInterface {
+  id: ID!
+  title: String!
+  author_name: String!
   created: AWSDateTime
   updated: AWSDateTime
   languages: [LangEnum]!
@@ -81,6 +135,7 @@ type Post {
   categories: [String]
   tags: [String]
   views: Int
+  author: User!
 }
 
 type PostMetadataConnection {
@@ -124,14 +179,8 @@ type Category {
 }
 
 type PostConnection {
-  items: [Post!]!
+  items: [PostListing!]!
   nextToken: String
-}
-
-type S3Object {
-  bucket: String
-  key: String
-  region: String
 }
 
 type Project {
@@ -148,6 +197,46 @@ type ProjectConnection {
   hasAfter: Boolean
   hasBefore: Boolean
   items: [Project!]!
+  nextToken: String
+}
+
+type UserTasks {
+  tasks: Tasks!
+  user: User!
+}
+
+type UserTaskConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [Tasks]!
+  lang: LangEnum
+  nextToken: String
+}
+
+type CreateTasksOutput {
+  userTasks: UserTasks
+  query: Query
+}
+
+type TasksListing implements TasksInterface {
+  id: ID!
+  title: String!
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+type Tasks implements TasksInterface {
+  id: ID!
+  title: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+type TasksConnection {
+  items: [TasksListing!]!
   nextToken: String
 }
 
@@ -168,21 +257,11 @@ type User {
   updated: AWSDateTime
 }
 
-type UserPost {
-  post: Post!
-  user: User!
-}
 
-type UserPostConnection {
-  before: String
-  after: String
-  hasAfter: Boolean
-  hasBefore: Boolean
-  items: [Post]!
-  lang: LangEnum
-  nextToken: String
+enum LangEnum {
+  fr
+  en
 }
-
 
 enum UserPostConnectionType {
   created
@@ -196,11 +275,45 @@ enum PostStatusType {
   scheduled
 }
 
-enum LangEnum {
-  fr
-  en
+enum ProjctStatusType {
+  active
+  inactive
+  deleted
 }
 
+enum UserTasksConnectionType {
+  created
+  interacted
+  viewed
+}
+
+enum TaskstatusType {
+  published
+  draft
+  scheduled
+}
+
+interface PostInterface {
+  id: ID!
+  title: String!
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+interface TasksInterface {
+  id: ID!
+  title: String!
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+input S3ObjectInput {
+  bucket: String!
+  key: String!
+  region: String!
+}
 
 input CreatePostInput {
   project: String!
@@ -236,8 +349,21 @@ input DeleteProjectInput {
   id: ID!
 }
 
-input S3ObjectInput {
-  bucket: String!
-  key: String!
-  region: String!
+input CreateTaskInput {
+  project: String!
+  lang: String
+  author: String
+  title: String
+  content: String
+  description: String
+}
+
+input UpdateTaskInput {
+  id: ID!
+  title: String
+  completed: Boolean
+}
+
+input DeleteTaskInput {
+  id: ID!
 }
