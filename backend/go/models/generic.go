@@ -41,13 +41,16 @@ var (
 )
 
 type Models struct {
-	Version   int64           `yaml:"version"`
-	Generic   int64           `yaml:"generic"`
-	Parent    string          `yaml:"parent"`
-	Plurial   string          `yaml:"plurial"`
-	Singular  string          `yaml:"singular"`
-	ClassName string          `yaml:"class"`
-	Class     *GenericHandler `yaml:"-"`
+	Version               int64           `yaml:"version"`
+	OneToMany             string          `yaml:"one_to_many"`
+	OneToManyUpdateFields string          `yaml:"one_to_many_update_parent_fields"`
+	ModelID               string          `yaml:"model"`
+	Generic               int64           `yaml:"generic"`
+	Parent                string          `yaml:"parent"`
+	Plurial               string          `yaml:"plurial"`
+	Singular              string          `yaml:"singular"`
+	ClassName             string          `yaml:"class"`
+	Class                 *GenericHandler `yaml:"-"`
 }
 
 type conf struct {
@@ -86,18 +89,21 @@ func (p GenericHandler) Initialize(r resolvers.Repository) error {
 		fmt.Println(" K :", k)
 		fmt.Println(" V :", v)
 
-		modelType := strings.ToLower(k)
+		modelType := strings.ToLower(strings.ToLower(pluralize.Singular(k)))
+		if v.ModelID != "" {
+			modelType = v.ModelID
+		}
 
 		ActionWord := v.Plurial
 		if v.Plurial == "" {
 			ActionWord = strings.Title(strings.ToLower(modelType))
 		}
-		ActionWordSingular := v.Singular
+		ActionWordSingular := strings.Title(strings.ToLower(v.Singular))
 		if ActionWordSingular == "" {
 			ActionWordSingular = strings.Title(strings.ToLower(pluralize.Singular(modelType)))
 		}
 
-		ActionWordPlurial := v.Plurial
+		ActionWordPlurial := strings.Title(strings.ToLower(v.Plurial))
 		if ActionWordPlurial == "" {
 			ActionWordPlurial = strings.Title(strings.ToLower(pluralize.Plural(modelType)))
 		}
@@ -144,11 +150,11 @@ type updateInputEvent struct {
 }
 
 type listPaginatedGenericInput struct {
-	Input       map[string]interface{} `json:"input"`
-	ParentType  string                 `json:"parent_type,omitempty"`
-	ParentValue string                 `json:"parent_value,omitempty"`
-	Parent      string                 `json:"parent,omitempty"`
-	Type        string                 `json:"type,omitempty"`
+	Input map[string]interface{} `json:"input"`
+	//bad	ParentType  string                 `json:"parent_type,omitempty"`
+	//bad	ParentValue string                 `json:"parent_value,omitempty"`
+	//bad	Parent      string                 `json:"parent,omitempty"`
+	Type string `json:"type,omitempty"`
 	// Type					string				`json:"type"`
 	Limit     int    `json:"limit"`
 	NextToken string `json:"nextToken"`
@@ -378,6 +384,7 @@ func (p GenericHandler) HandleList(reqObj *acenteralib.RequestObject, identity m
 		fmt.Println(reqObj.User.Username)
 		fmt.Println(reqObj.User.Roles)
 	}
+
 	limits := int64(20)
 	if input.Limit >= 1 && input.Limit <= 100 {
 		limits = int64(input.Limit)
@@ -390,6 +397,18 @@ func (p GenericHandler) HandleList(reqObj *acenteralib.RequestObject, identity m
 		//do something here
 		parent = val.(string)
 	}
+
+	fmt.Println("GOT PARENT TST", parent)
+	if parent == "" {
+		fmt.Println("GOT MODEL ", p.Models.Parent)
+		if p.Models.Parent != "" {
+			fmt.Println("test if input as it .. in ", input.Input)
+			if val, ok := input.Input[p.Models.Parent]; ok {
+				parent = val.(string)
+			}
+		}
+	}
+	fmt.Println("GOT PARENT 1 - TST", parent, " and elementType is :", elementType)
 
 	if parent == "" {
 		parent = os.Getenv("SITE")
@@ -413,7 +432,7 @@ func (p GenericHandler) HandleList(reqObj *acenteralib.RequestObject, identity m
 		// all ... for now TaskionExpression:   aws.String("SongTitle"),
 		TableName: aws.String(os.Getenv("APP_DATA_TABLE_NAME")),
 	}
-	fmt.Println("WILL Query using :", parent, " and active#", elementType, "# using gsi-data-index")
+	fmt.Println("1 - WILL Query using :", parent, " and active#", elementType, "# using gsi-data-index")
 	var lastK map[string]interface{}
 	if input.NextToken != "" {
 		decoded, err := base64.StdEncoding.DecodeString(input.NextToken)
@@ -467,6 +486,27 @@ func (p GenericHandler) HandleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	if elementType == "" {
 		elementType = mutation.Type
 	}
+
+	// OneToMany
+	existingID := ""
+	if val, ok := mutation.Input["id"]; ok {
+		existingID = val.(string)
+	}
+	if p.Models.OneToMany != "" {
+		// Ok we might need to creeate a parent object first
+		if existingID != "" {
+			// Ok we will only update the parent object to either add the field as part of the aray list, and other such as authors etc...
+			// based on the list array
+			// fmt.Println(existingID)
+		} else {
+			// OK must fist create a new Parent item without the "current sk" ...
+			// we) will use the OneToMany "value" as "SK" (in a lower string format )
+		}
+	} else {
+		// ?? reg create
+	}
+
+	// Regular Create( from here )
 
 	taskName := mutation.Input["title"].(string)
 	site := os.Getenv("SITE")

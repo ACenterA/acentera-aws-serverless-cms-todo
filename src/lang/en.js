@@ -16,6 +16,19 @@ export default {
     update: 'Update',
     edit: 'Edit'
   },
+  post: {
+    display_time: 'Date',
+    display_time_placeholder: 'Pick date and time',
+    title: 'Title',
+    userinfo: 'Author',
+    author_select: 'Pick an Author',
+    author_rating: 'Rating',
+    content: 'Description',
+    content_placeholder: 'Enter description here',
+    description: 'Description',
+    description_placeholder: 'Enter description here',
+    cover_image: 'Cover Image'
+  },
   plugins: {
     'serverless-cms': {
       button: {

@@ -16,6 +16,19 @@ export default {
     update: 'Mettre a jour',
     edit: 'Modifier'
   },
+  post: {
+    display_time: 'Date',
+    display_time_placeholder: 'Sélectionnez',
+    title: 'Titre',
+    userinfo: 'Auteur',
+    author_select: 'Sélectionnez un auteur',
+    author_rating: 'Évaluation',
+    description: 'Description',
+    description_placeholder: 'Entrez une description ici',
+    content: 'Content',
+    content_placeholder: 'Enter description here',
+    cover_image: 'Image'
+  },
   plugins: {
     'serverless-cms': {
       button: {

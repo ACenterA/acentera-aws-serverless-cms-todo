@@ -613,263 +613,35 @@ Resources:
          Fn::ImportValue:
             Fn::Sub: "acentera:<%STAGE%>:AppSync:WriterRole"
 
-
-  
-  AppSyncModelGetAuthorQueries:
+{{ with .Queries }}
+  {{ range . }}
+  AppSyncModel{{ .Name | Title }}Queries:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId:
         Fn::GetAtt: 'GraphApi.ApiId'
       TypeName: Query
-      FieldName: getAuthor
+      FieldName: {{ .Name }}
       DataSourceName:
         Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.getAuthor", "context": $utils.toJson($context) } }'
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.{{ .Name }}", "context": $utils.toJson($context) } }'
       ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelBatchgetAuthtorQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: batchgetAuthtor
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.batchgetAuthtor", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelListAllAuthorsQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: listAllAuthors
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.listAllAuthors", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelListAuthorsQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: listAuthors
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.listAuthors", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelGetPostQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: getPost
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.getPost", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelListPostsQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: listPosts
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.listPosts", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelListAllProjectsQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: listAllProjects
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.listAllProjects", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelListProjectsQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: listProjects
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.listProjects", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelGetTaskQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: getTask
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.getTask", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelListTasksQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: listTasks
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.listTasks", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelGetUserPublicInfoQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: getUserPublicInfo
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.getUserPublicInfo", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelBatchgetUserPublicInfoQueries:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Query
-      FieldName: batchgetUserPublicInfo
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.batchgetUserPublicInfo", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-   
+  {{ end }} 
+{{ end }}
 
 
-
-
-  
-  AppSyncModelCreatePostMutations:
+{{ with .Mutations }}
+  {{ range . }}
+  AppSyncModel{{ .Name | Title }}Mutations:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId:
         Fn::GetAtt: 'GraphApi.ApiId'
       TypeName: Mutation
-      FieldName: createPost
+      FieldName: {{ .Name }}
       DataSourceName:
         Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.createPost", "context": $utils.toJson($context) } }'
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.{{ .Name }}", "context": $utils.toJson($context) } }'
       ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelUpdatePostMutations:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Mutation
-      FieldName: updatePost
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.updatePost", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelDeletePostMutations:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Mutation
-      FieldName: deletePost
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.deletePost", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelCreateProjectMutations:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Mutation
-      FieldName: createProject
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.createProject", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelUpdateProjectMutations:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Mutation
-      FieldName: updateProject
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.updateProject", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelDeleteProjectMutations:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Mutation
-      FieldName: deleteProject
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.deleteProject", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelCreateTasksMutations:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Mutation
-      FieldName: createTasks
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.createTasks", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelUpdateTasksMutations:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Mutation
-      FieldName: updateTasks
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.updateTasks", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-  
-  AppSyncModelDeleteTasksMutations:
-    Type: AWS::AppSync::Resolver
-    Properties:
-      ApiId:
-        Fn::GetAtt: 'GraphApi.ApiId'
-      TypeName: Mutation
-      FieldName: deleteTasks
-      DataSourceName:
-        Fn::GetAtt: "AppSyncModelDataSource.Name"
-      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.deleteTasks", "context": $utils.toJson($context) } }'
-      ResponseMappingTemplate: '$util.toJson($context.result)'
-   
-
+  {{ end }} 
+{{ end }}

@@ -1,3 +1,31 @@
+nativetype Project {
+    # model: projects
+    plurial: Projects
+    singular: Project
+    version: 1
+}
+
+# TODO Add ProjectStatusType As enum
+type Project {
+  id: ID!
+  title: String!
+  status: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+
+type Mutation {
+  createProject(input: CreateProjectInput!): Project
+  updateProject(input: UpdateProjectInput!): Project
+  deleteProject(input: DeleteProjectInput!): Project
+}
+
+type Query {
+  listAllProjects: ProjectConnection!
+  listProjects(limit: Int, nextToken: String): ProjectConnection!
+}
+
 
 input CreateProjectInput {
   title: String!
@@ -14,29 +42,10 @@ input DeleteProjectInput {
   id: ID!
 }
 
-type Mutation {
-  createProject(input: CreateProjectInput!): Project
-  updateProject(input: UpdateProjectInput!): Project
-  deleteProject(input: DeleteProjectInput!): Project
-}
-
-type Query {
-  listAllProjects: ProjectConnection!
-  listProjects(limit: Int, nextToken: String): ProjectConnection!
-}
-
 enum ProjctStatusType {
     active
     inactive
     deleted
-}
-# TODO Add ProjectStatusType As enum
-type Project {
-  id: ID!
-  title: String!
-  status: String!
-  created: AWSDateTime
-  updated: AWSDateTime
 }
 
 type ProjectConnection {

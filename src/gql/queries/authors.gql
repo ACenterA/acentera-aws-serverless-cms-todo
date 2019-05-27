@@ -1,0 +1,103 @@
+
+query ALL_AUTHORS {
+  listAllAuthors {
+    items {
+      id,
+      title,
+      status,
+      created,
+      updated
+    }
+  }
+}
+
+subscription onCreateAuthor {
+  onCreateAuthtor {
+    id
+    title
+    status
+    created
+  }
+}
+
+query listAuthors($limit: Int, $nextToken: String) {
+  listAuthors(
+    limit: $limit,
+    nextToken: $nextToken
+  ) {
+      items {
+        id,
+        title,
+        status,
+        created
+      },
+      nextToken
+  }
+}
+
+
+query listAuthorsByProject($project: String, $limit: Int, $nextToken: String) {
+  listAuthors(
+    input: {
+      project: $project
+    },
+    limit: $limit,
+    nextToken: $nextToken
+  ) {
+      items {
+        id,
+        title,
+        status,
+        created
+      },
+      nextToken
+  }
+}
+
+
+# CRUD MUTATIONS
+mutation deleteAuthor($id: ID!, $project: String!) {
+  deleteProject(
+    input: {
+      id: $id,
+      project: $project
+    }
+  ) {
+    id,
+    status
+  }
+}
+
+
+mutation updateAuthor($id: ID!, $project: String!, $title: String!, $status: String!) {
+  updateAuthor(
+    input: {
+      id: $id
+      project: $project,
+      title: $title
+      status: $status
+    }
+  ) {
+    id
+    title
+    status
+    updated
+  }
+}
+
+
+mutation CreateAuthorMutation($userid: String!, $project: String!, $status: String!) {
+  createAuthor(
+    input: {
+      userid: $userid,
+      project: $project,
+      title: $title,
+      status: $status
+    }
+  ) {
+    id
+    title
+    status
+    created
+  }
+}

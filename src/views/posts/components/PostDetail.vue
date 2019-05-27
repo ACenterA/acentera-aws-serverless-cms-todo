@@ -33,7 +33,7 @@
             <div class="postInfo-container">
               <el-row>
                 <el-col :span="8">
-                  <el-form-item :label="form_userinfo_label" label-width="45px" class="postInfo-container-item">
+                  <el-form-item :label="form_userinfo_label" class="postInfo-container-item">
                     <el-select :placeholder="form_userinfo_placeholder" v-model="postForm.author" :remote-method="getRemoteUserList" filterable remote>
                       <el-option v-for="(item,index) in userListOptions" :key="item+index" :label="item" :value="item"/>
                     </el-select>
@@ -41,13 +41,13 @@
                 </el-col>
 
                 <el-col :span="10">
-                  <el-form-item :label="form_display_time_label" label-width="80px" class="postInfo-container-item">
+                  <el-form-item :label="form_display_time_label" class="postInfo-container-item">
                     <el-date-picker :placeholder="form_display_time_placeholder" v-model="postForm.display_time" type="datetime" format="yyyy-MM-dd HH:mm:ss"/>
                   </el-form-item>
                 </el-col>
 
                 <el-col :span="6">
-                  <el-form-item :label="form_author_rating_label" label-width="60px" class="postInfo-container-item">
+                  <el-form-item :label="form_author_rating_label" class="postInfo-container-item">
                     <el-rate
                       v-model="postForm.importance"
                       :max="3"
@@ -62,7 +62,7 @@
           </el-col>
         </el-row>
 
-        <el-form-item :label="form_desc_label" style="margin-bottom: 40px;" label-width="45px">
+        <el-form-item :label="form_desc_label" style="margin-bottom: 40px;">
           <el-input :rows="1" :placeholder="form_desc_placeholder" v-model="postForm.content_short" type="textarea" class="article-textarea" autosize/>
           <span v-show="contentShortLength" class="word-counter">{{ contentShortLength }}字</span>
         </el-form-item>
@@ -71,7 +71,7 @@
           <Tinymce ref="editor" :height="400" v-model="postForm.content" />
         </el-form-item>
 
-        <el-form-item :label="form_author_rating_label" prop="image_uri" style="margin-bottom: 30px;" label-width="60px">
+        <el-form-item :label="form_cover_image_label" prop="image_uri" style="margin-bottom: 30px;">
           <Upload v-model="postForm.image_uri" />
         </el-form-item>
       </div>
@@ -122,11 +122,20 @@ export default {
   data() {
     const validateRequire = (rule, value, callback) => {
       if (value === '') {
-        this.$message({
-          message: rule.field + '为必传项',
-          type: 'error'
-        })
-        callback(new Error(rule.field + '为必传项'))
+        console.error(rule)
+        if (rule.error) {
+          this.$message({
+            message: rule.error,
+            type: rule.error_type || 'error'
+          })
+          callback(new Error(rule.field))
+        } else {
+          this.$message({
+            message: rule.field,
+            type: rule.error_type || 'error'
+          })
+          callback(new Error(rule.field))
+        }
       } else {
         callback()
       }
@@ -155,7 +164,10 @@ export default {
       rules: {
         status: [{ validator: validateRequire }],
         // image_uri: [{ validator: validateRequire }],
-        title: [{ validator: validateRequire }],
+        title: [{
+          validator: validateRequire,
+          error: 'Errrrrrr'
+        }],
         content: [{ validator: validateRequire }]
         // source_uri: [{ validator: validateSourceUri, trigger: 'blur' }]
       },
@@ -199,6 +211,9 @@ export default {
     },
     form_author_rating_label() {
       return this.$t('post.author_rating') + ':'
+    },
+    form_cover_image_label() {
+      return this.$t('post.cover_image') + ':'
     },
     form_desc_label() {
       return this.$t('post.content') + ':'

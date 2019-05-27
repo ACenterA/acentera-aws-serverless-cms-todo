@@ -5,10 +5,17 @@ schema {
 }
 
 type Query {
+  getAuthor(input: ID!): Author
+  batchgetAuthtor(input: [ID]!): [Author]!
+  listAllAuthors: AuthorConnection!
+  listAuthors(
+    input: ListAuthorsInput!
+    limit: Int
+    nextToken: String
+  ): AuthorConnection!
   getPost(id: ID!): Post
   listPosts(
-    project: String
-    lang: LangEnum
+    input: ListPostsInput
     limit: Int
     nextToken: String
   ): PostConnection!
@@ -85,10 +92,56 @@ type Subscription {
   ): TasksInterface
 }
 
+type Author {
+  id: ID!
+  title: String!
+  userid: String!
+  status: String
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+type AuthorConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [Author!]!
+  nextToken: String
+}
+
 type S3Object {
   bucket: String
   key: String
   region: String
+}
+
+type PostListing implements PostInterface {
+  id: ID!
+  title: String!
+  languages: [LangEnum!]
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+type Post implements PostInterface {
+  lang: LangEnum!
+  translations(lang: LangEnum): PostMetadataConnection
+  comments(
+    lang: LangEnum
+    limit: Int
+    nextToken: String
+  ): PostCommentConnection
+  categories: [String]
+  tags: [String]
+  views: Int
+  author: User!
+  id: ID!
+  title: String!
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime
 }
 
 type UserPost {
@@ -109,33 +162,6 @@ type UserPostConnection {
 type CreatePostOutput {
   userPost: UserPost
   query: Query
-}
-
-type PostListing implements PostInterface {
-  id: ID!
-  title: String!
-  author_name: String!
-  created: AWSDateTime
-  updated: AWSDateTime
-}
-
-type Post implements PostInterface {
-  id: ID!
-  title: String!
-  author_name: String!
-  created: AWSDateTime
-  updated: AWSDateTime
-  languages: [LangEnum]!
-  translations(lang: LangEnum): PostMetadataConnection
-  comments(
-    lang: LangEnum
-    limit: Int
-    nextToken: String
-  ): PostCommentConnection
-  categories: [String]
-  tags: [String]
-  views: Int
-  author: User!
 }
 
 type PostMetadataConnection {
@@ -311,6 +337,10 @@ interface TasksInterface {
   updated: AWSDateTime
 }
 
+input ListAuthorsInput {
+  project: String!
+}
+
 input S3ObjectInput {
   bucket: String!
   key: String!
@@ -334,6 +364,11 @@ input UpdatePostInput {
 
 input DeletePostInput {
   id: ID!
+}
+
+input ListPostsInput {
+  project: String
+  lang: LangEnum
 }
 
 input CreateProjectInput {

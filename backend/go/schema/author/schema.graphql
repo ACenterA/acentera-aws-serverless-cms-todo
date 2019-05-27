@@ -1,0 +1,39 @@
+nativetype Author {
+    version: 1
+}
+
+type Author {
+  id: ID!
+  title: String!
+  userid: String!
+  status: String
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+input ListAuthorsInput {
+  project: String!
+}
+
+
+# type Mutation {
+#  createProject(input: CreateProjectInput!): Project
+#  updateProject(input: UpdateProjectInput!): Project
+#  deleteProject(input: DeleteProjectInput!): Project
+# }
+
+type Query {
+  getAuthor(input: ID!): Author
+  batchgetAuthtor(input: [ID]!): [Author]!
+  listAllAuthors: AuthorConnection!
+  listAuthors(input: ListAuthorsInput!, limit: Int, nextToken: String): AuthorConnection!
+}
+
+type AuthorConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [Author!]!
+  nextToken: String
+}

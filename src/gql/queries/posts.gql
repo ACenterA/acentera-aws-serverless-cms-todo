@@ -5,14 +5,16 @@ enum LangEnum {
 
 query listPosts($project: String, $limit: Int, $nextToken: String) {
   listPosts(
-    project: $project,
+    input: {
+      project: $project,
+    },
     limit: $limit,
     nextToken: $nextToken
   ) {
       items {
         id,
         title,
-        languages,
+        author_name,
         created
       },
       nextToken

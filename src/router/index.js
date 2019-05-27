@@ -10,6 +10,9 @@ import AdminDashboard from '@/views/admin/Dashboard'
 import AdminProjects from '@/views/admin/Projects'
 import AdminProjectsCreate from '@/views/admin/Projects/Create'
 
+import AdminAuthors from '@/views/admin/Authors'
+import AdminAuthorsCreate from '@/views/admin/Authors/Create'
+
 import AdminSettingsLayout from '@/views/admin/settings/Layout'
 import AdminSettingsIndex from '@/views/admin/settings/Index'
 import AdminSettingsExample from '@/views/admin/settings/Example'
@@ -245,6 +248,51 @@ export const routerValid = [
                 name: 'AdminProjectsCreate',
                 layout: 'Layout',
                 component: AdminProjectsCreate,
+                hidden: false,
+                meta: {
+                  title: 'Create',
+                  hideMainMenu: true,
+                  showMenu: adminPluginNameMenu,
+                  icon: 'lock',
+                  roles: ['admin'] // you can set roles in root nav
+                }
+              }
+            ]
+          },
+          {
+            path: 'authors',
+            name: 'AdminAuthors',
+            layout: 'Layout',
+            component: DefaultLayout,
+            hidden: false,
+            meta: {
+              title: 'Authors',
+              hideMainMenu: true,
+              showMenu: adminPluginNameMenu,
+              // example: class: 'serverless-cms-container',
+              icon: 'lock',
+              roles: ['admin'] // you can set roles in root nav
+            },
+            children: [
+              {
+                path: 'list',
+                name: 'AdminAuthorsList',
+                layout: 'Layout',
+                component: AdminAuthors,
+                hidden: false,
+                meta: {
+                  title: 'List',
+                  hideMainMenu: true,
+                  showMenu: adminPluginNameMenu,
+                  icon: 'lock',
+                  roles: ['admin'] // you can set roles in root nav
+                }
+              },
+              {
+                path: 'create',
+                name: 'AdminAuthorsCreate',
+                layout: 'Layout',
+                component: AdminAuthorsCreate,
                 hidden: false,
                 meta: {
                   title: 'Create',

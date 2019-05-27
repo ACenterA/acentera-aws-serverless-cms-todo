@@ -1,3 +1,9 @@
+nativetype Task {
+    plurial: Tasks
+    singular: task
+    version: 1
+}
+
 type UserTasks {
   tasks: Tasks!
   user: User!

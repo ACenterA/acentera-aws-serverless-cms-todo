@@ -1,16 +1,61 @@
 models:
-  tasks:
-    version: 1
-    plurial: Tasks
-    singular: task
 
-  posts:
-    version: 1
-    parent: project
-    # plurial: Posts
-    # singular: post
+  
+    Author:
+      
+        
+           version: 1
+        
+      
+  
+    Post:
+      
+        
+           plurial: Posts
+        
+           singular: post
+        
+           version: 1
+        
+           parent: project
+        
+           one_to_many: lang
+        
+           one_to_many_update_parent_fields: upk
+        
+      
+  
+    Project:
+      
+        
+           plurial: Projects
+        
+           singular: Project
+        
+           version: 1
+        
+      
+  
+    Task:
+      
+        
+           plurial: Tasks
+        
+           singular: task
+        
+           version: 1
+        
+      
+  
+    User:
+      
+        
+           plurial: Users
+        
+           singular: user
+        
+           version: 1
+        
+      
+   
 
-  projects:
-    version: 1
-    # plurial: Tasks
-    # singular: task

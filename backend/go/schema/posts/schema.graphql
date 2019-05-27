@@ -1,3 +1,47 @@
+nativetype Post {
+    # You may override the model
+    # model: posts
+    plurial: Posts
+    singular: post
+    version: 1
+
+    # The parent field input parameters also used for GSI
+    parent: project
+
+    # When creating a Post it will update the metadata based on the lang value
+    # It will use the id passed (will be empty if, its a new one)
+    # If its a new language, the id of the post must be passed, else threated as a new one...
+    one_to_many: lang
+    one_to_many_update_parent_fields: upk
+}
+
+# what about languages?
+interface PostInterface {
+  id: ID!
+  title: String!
+  author_name: String!
+  created: AWSDateTime
+  updated: AWSDateTime
+}
+
+# PostListing should not have N+1 Queries ...
+type PostListing implements PostInterface {
+  id: ID!
+  title: String!
+  languages: [LangEnum!]
+}
+
+type Post implements PostInterface {
+  lang: LangEnum!
+  translations(lang: LangEnum): PostMetadataConnection
+  comments(lang: LangEnum, limit: Int, nextToken: String): PostCommentConnection
+  categories: [String]
+  tags: [String]
+  views: Int
+  author: User!
+}
+
+
 type UserPost {
   post: Post!
   user: User!
@@ -32,6 +76,11 @@ input DeletePostInput {
   id: ID!
 }
 
+input ListPostsInput {
+  project: String
+  lang: LangEnum
+}
+
 type Mutation {
   createPost(input: CreatePostInput!): CreatePostOutput
   updatePost(input: UpdatePostInput!): Post
@@ -47,7 +96,7 @@ type Query {
   getPost(id: ID!): Post
 
   # listPosts should return a PostConnection that ony have a userId (prevent N+1 Loops)
-  listPosts(project: String, lang: LangEnum, limit: Int, nextToken: String): PostConnection!
+  listPosts(input: ListPostsInput, limit: Int, nextToken: String): PostConnection!
 }
 
 ### POSTS
@@ -66,39 +115,6 @@ enum PostStatusType {
     published
     draft
     scheduled
-}
-
-# what about languages?
-interface PostInterface {
-  id: ID!
-  title: String!
-  author_name: String!
-  created: AWSDateTime
-  updated: AWSDateTime
-}
-
-# PostListing should not have N+1 Queries ...
-type PostListing implements PostInterface {
-  id: ID!
-  title: String!
-  author_name: String!
-  created: AWSDateTime
-  updated: AWSDateTime  
-}
-
-type Post implements PostInterface {
-  id: ID!
-  title: String!
-  author_name: String!
-  created: AWSDateTime
-  updated: AWSDateTime
-  languages: [LangEnum]!
-  translations(lang: LangEnum): PostMetadataConnection
-  comments(lang: LangEnum, limit: Int, nextToken: String): PostCommentConnection
-  categories: [String]
-  tags: [String]
-  views: Int
-  author: User!
 }
 
 type PostMetadataConnection {
