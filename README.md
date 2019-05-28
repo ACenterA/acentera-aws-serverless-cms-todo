@@ -95,7 +95,7 @@ find build/   -type f -exec sed -ri 's/serverless-cms/my-new-plugin/g' {} \;
 
 
 # License
-The software is licensed under the Apache 2.0 license. The UI, including but not limited to images, icons, patterns, and derivatives thereof are licensed under the Creative Commons Attribution 4.0 International License.
+The software is licensed under the MIT license.
 
 # Attribution
-By using this UI, you agree that any application which incorporates it shall prominently display the message “Made with ACenterA” in a legible manner in the footer of the admin console. This message must open a link to acentera.com when clicked or touched. For permission to remove the attribution, contact us at support@acentera.com .
+By using this UI, we would like that any application which incorporates it shall prominently display the message “Made with ACenterA” in a legible manner in the footer of the admin console. This message must open a link to acentera.com when clicked or touched.
