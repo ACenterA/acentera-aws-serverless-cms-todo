@@ -82,6 +82,7 @@ services:
       - ClientJwtSecretKey
       - HOME_PWD=${PWD}/backend/go/
       - DEV_ACCOUNTID=${DEV_ACCOUNTID}
+      - RUNWS=true
       # - PATH=/usr/local/bin/:/home/atom/node_modules/serverless/bin/:/usr/bin:/bin:/usr/local/go/bin/
     ports:
       - "3003:3000"

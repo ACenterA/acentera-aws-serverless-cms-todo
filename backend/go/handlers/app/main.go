@@ -66,20 +66,22 @@ func init() {
 	*/
 }
 
+func RegisterRoutes(r *gin.Engine) {
+	// REST API Queries here
+	r.POST(fmt.Sprintf("/api/plugins/%s/setup/bootstrap", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.AppPluginSiteBootstrap))
+	r.GET(fmt.Sprintf("/api/plugins/%s/settings", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.GetSettings))
+
+	// Add any others
+	// authenticated ones are, examle
+	r.GET(fmt.Sprintf("/api/plugins/%s/me", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGatewayJWTSecured(gofaas.GetMe))
+}
+
 func Handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	if ginLambda == nil {
 		// stdout and stderr are sent to AWS CloudWatch Logs
 		r := gin.Default()
-
-		// REST API Queries here
-		r.POST(fmt.Sprintf("/api/plugins/%s/setup/bootstrap", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.AppPluginSiteBootstrap))
-		r.GET(fmt.Sprintf("/api/plugins/%s/settings", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.GetSettings))
-
-		// Add any others
-		// authenticated ones are, examle
-		r.GET(fmt.Sprintf("/api/plugins/%s/me", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGatewayJWTSecured(gofaas.GetMe))
-
+		RegisterRoutes(r)
 		ginLambda = ginadapter.New(r)
 	}
 
@@ -91,13 +93,18 @@ func main() {
 	// if (os.Getenv("PLUGIN_ACTION") == "Authorizer") {
 	// lambda.Start(gofaas.NotifyAPIGatewayJWTAuth(gofaas.AuthorizerHandler))
 	// } else {
-
-	if os.Getenv("TYPE") == "WEBSITE" {
-		lambda.Start(Awslambda.NotifyAPIGateway(WebsitePublic))
-	} else if os.Getenv("TYPE") == "MODELS" {
-		lambda.Start(Awslambda.NotifyAppSyncJWTSecure(Execute))
+	if os.Getenv("RUNWS") != "" {
+		r := gin.Default()
+		RegisterRoutes(r)
+		r.Run(":3000") // listen and serve on 0.0.0.0:8080
 	} else {
-		lambda.Start(Handler)
+		if os.Getenv("TYPE") == "WEBSITE" {
+			lambda.Start(Awslambda.NotifyAPIGateway(WebsitePublic))
+		} else if os.Getenv("TYPE") == "MODELS" {
+			lambda.Start(Awslambda.NotifyAppSyncJWTSecure(Execute))
+		} else {
+			lambda.Start(Handler)
+		}
 	}
 }
 

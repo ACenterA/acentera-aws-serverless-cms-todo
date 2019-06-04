@@ -17,21 +17,15 @@ nativetype Post {
 
 # what about languages?
 interface PostInterface {
-  id: ID!
-  title: String!
   author_name: String!
-  created: AWSDateTime
-  updated: AWSDateTime
 }
 
 # PostListing should not have N+1 Queries ...
-type PostListing implements PostInterface {
-  id: ID!
-  title: String!
+type PostListing implements BaseObject & PostInterface {
   languages: [LangEnum!]
 }
 
-type Post implements PostInterface {
+type Post implements BaseObject & PostInterface {
   lang: LangEnum!
   translations(lang: LangEnum): PostMetadataConnection
   comments(lang: LangEnum, limit: Int, nextToken: String): PostCommentConnection

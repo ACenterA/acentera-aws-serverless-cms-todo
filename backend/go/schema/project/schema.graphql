@@ -6,12 +6,7 @@ nativetype Project {
 }
 
 # TODO Add ProjectStatusType As enum
-type Project {
-  id: ID!
-  title: String!
-  status: String!
-  created: AWSDateTime
-  updated: AWSDateTime
+type Project implements BaseObject {
 }
 
 

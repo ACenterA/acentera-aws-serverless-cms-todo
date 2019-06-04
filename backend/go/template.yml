@@ -758,6 +758,30 @@ Resources:
         Fn::GetAtt: "AppSyncModelDataSource.Name"
       RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.batchgetUserPublicInfo", "context": $utils.toJson($context) } }'
       ResponseMappingTemplate: '$util.toJson($context.result)'
+  
+  AppSyncModelListUsersQueries:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId:
+        Fn::GetAtt: 'GraphApi.ApiId'
+      TypeName: Query
+      FieldName: listUsers
+      DataSourceName:
+        Fn::GetAtt: "AppSyncModelDataSource.Name"
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.listUsers", "context": $utils.toJson($context) } }'
+      ResponseMappingTemplate: '$util.toJson($context.result)'
+  
+  AppSyncModelListAllUsersQueries:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId:
+        Fn::GetAtt: 'GraphApi.ApiId'
+      TypeName: Query
+      FieldName: listAllUsers
+      DataSourceName:
+        Fn::GetAtt: "AppSyncModelDataSource.Name"
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "query.listAllUsers", "context": $utils.toJson($context) } }'
+      ResponseMappingTemplate: '$util.toJson($context.result)'
    
 
 

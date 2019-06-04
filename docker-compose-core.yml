@@ -38,24 +38,35 @@ services:
       - ./go/:/lambda/
       - /var/run/docker.sock:/var/run/docker.sock:rw
     environment:
-      - SKIP_COGNITO=true
-      - SKIP_SSM=true
-      - DOCKER_NETWORK=${COMPOSE_PROJECT_NAME}_backend
-      - DISPLAY
-#      - AWS_SECRET_ACCESS_KEY
-      - LOGINSRV_DYNAMODB=endpoint=http://dynamodb:8000,table=app-data
-      - DYNAMODB_ENDPOINT=http://dynamodb:8000
-      - APP_DATA_TABLE_NAME=app-data
-      - APP_DATA_PERM_TABLE_NAME=app-data-permissions
-      - SESSION_TABLE_NAME=app-data-sessions
-      - KEY_ID=a3A8Kaz#$$1kJ#$$1!
-      - JWT_SECRET=docker-compose-secret
-      - HOME_PWD=${PWD}/go/
-      - AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
-      - ADMIN_USERNAME
+       JWT_SECRET: "docker-compose-secret"
+       STACK_ID: "arn:aws:cloudformation:us-east-1:123456789012:stack/local/51af3dc0-da77-11e4-872e-1234567db123"
+       SESSION_TABLE_NAME: "app-data-sessions"
+       SMS_CONFIG_ARN: ""
+       ADMIN_USERNAME: "admin@acentera.com"
+       AWS_LAMBDA_FUNCTION_HANDLER: "main"
+       EMAIL_ENABLED: "false"
+       SMS_CONFIG_EXTERNAL_ID: ""
+       KEY_ID: ${KEY_ID}
+       AWS_ACCESS_KEY_ID: "a"
+       APP_DATA_PERM_TABLE_NAME: "app-data-permissions"
+       AWS_DEFAULT_REGION: "us-east-1"
+       SKIP_SSM: "true"
+       LOGINSRV_DYNAMODB: "endpoint=http://dynamodb:8000,table=app-data"
+       SKIP_COGNITO: "true"
+       STACK_NAME: "local"
+       AWS_SAM_LOCAL: "true"
+       AWS_REGION: "us-east-1"
+       SECRET: ""
+       AWS_SECRET_ACCESS_KEY: "a"
+       APP_DATA_TABLE_NAME: "app-data"
+       STAGE: ""
+       RUNWS: "true"
     ports:
      - "127.0.0.1:3000:3000"
        # old cmd #make dev
+    command:
+      /go/src/github.com/nzoschke/gofaas/handlers/app/main
+
     networks:
       backend:
         aliases:

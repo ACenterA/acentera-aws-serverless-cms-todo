@@ -1,23 +1,51 @@
 nativetype User {
     plurial: Users
     singular: user
+    model: user
     version: 1
+
+    # The parent field input parameters also used for GSI
+    id: md5,email
+    one_to_many: plugin_key
+    one_to_many_update_parent_fields: email,title
+    # admin: 1
 }
 
+# Only Admin can see User objects
 type UserPublic {
   id: ID!
   title: String!
+  display_name: String
+}
+
+
+input ListUsersSearchInput {
+  name: String
+  email: String
+}
+
+type UserConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [User!]!
+  nextToken: String
 }
 
 type Query {
   getUserPublicInfo(input: ID!): UserPublic
   batchgetUserPublicInfo(input: [ID]!): [UserPublic]!
+  listUsers(input: ListUsersSearchInput, limit: Int, nextToken: String): UserConnection!
+  listAllUsers: UserConnection!
 }
 
-type User {
-  id: ID!
+# Only Admin can see User objects
+type User implements BaseObject {
   posts(limit: Int, type: UserPostConnectionType, nextToken: String): UserPostConnection
   profilePicture: S3Object
-  created: AWSDateTime
-  updated: AWSDateTime
+  email: String
+  display_name: String
+  firstName: String
+  lastName: String
 }

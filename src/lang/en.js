@@ -61,6 +61,13 @@ export default {
   },
   error: {
     no_vpc_in_region: 'No VPC\'s available in {region}',
-    no_subnet_in_region_vpc: 'No subnets available in {region} for vpc {vpc}'
+    no_subnet_in_region_vpc: 'No subnets available in {region} for vpc {vpc}',
+    input: {
+      title: 'Missing Display Name',
+      email: 'Missing email address'
+    }
+  },
+  user: {
+    title: 'Public Name'
   }
 }

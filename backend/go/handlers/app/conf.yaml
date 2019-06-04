@@ -54,6 +54,8 @@ models:
         
            singular: user
         
+           model: user
+        
            version: 1
         
       

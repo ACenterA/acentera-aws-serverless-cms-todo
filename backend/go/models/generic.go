@@ -3,6 +3,7 @@ package models
 import (
 	// "context"
 	// "github.com/aws/aws-lambda-go/lambda"
+	"crypto/md5"
 	"log"
 
 	resolvers "github.com/sbstjn/appsync-resolvers"
@@ -19,6 +20,7 @@ import (
 	"github.com/acenteracms/acenteralib"
 
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 
 	pluralize "github.com/gertd/go-pluralize"
@@ -42,7 +44,9 @@ var (
 
 type Models struct {
 	Version               int64           `yaml:"version"`
+	Admin                 int64           `yaml:"admin"`
 	OneToMany             string          `yaml:"one_to_many"`
+	CustomId              string          `yaml:"id"`
 	OneToManyUpdateFields string          `yaml:"one_to_many_update_parent_fields"`
 	ModelID               string          `yaml:"model"`
 	Generic               int64           `yaml:"generic"`
@@ -372,7 +376,13 @@ func (p GenericHandler) HandleListAll(reqObj *acenteralib.RequestObject, identit
 	return output, err
 }
 
+func (p GenericHandler) HandleListAdmin(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input listPaginatedGenericInput) (*PaginatedGeneric, error) {
+	return p.handleList(false, reqObj, identity, input)
+}
 func (p GenericHandler) HandleList(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input listPaginatedGenericInput) (*PaginatedGeneric, error) {
+	return p.handleList(false, reqObj, identity, input)
+}
+func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject, identity map[string]interface{}, input listPaginatedGenericInput) (*PaginatedGeneric, error) {
 
 	elementType := p.ElementType
 	if elementType == "" {
@@ -478,33 +488,93 @@ func (p GenericHandler) HandleList(reqObj *acenteralib.RequestObject, identity m
 }
 
 func (p GenericHandler) HandleCreateGeneric(reqObj *acenteralib.RequestObject, identity map[string]interface{}, mutation createInputEvent) (*map[string]interface{}, error) {
+	return p.handleCreateGeneric(reqObj, identity, mutation, false, nil, nil)
+}
+
+func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, identity map[string]interface{}, mutation createInputEvent, isNextMutation bool, nextItem *dynamodb.PutItemInput, parentItem *map[string]interface{}) (*map[string]interface{}, error) {
 	// TODO: Create if user is Admin
-
 	fmt.Println("Create Generic ...")
-
 	elementType := p.ElementType
 	if elementType == "" {
 		elementType = mutation.Type
 	}
+	hasChildMutation := false // isNextMutation // false
 
-	// OneToMany
+	// OneToMany ?????
+	// if we receive an existing id that means we already have the metadata created ...
 	existingID := ""
 	if val, ok := mutation.Input["id"]; ok {
 		existingID = val.(string)
 	}
-	if p.Models.OneToMany != "" {
-		// Ok we might need to creeate a parent object first
-		if existingID != "" {
-			// Ok we will only update the parent object to either add the field as part of the aray list, and other such as authors etc...
-			// based on the list array
-			// fmt.Println(existingID)
+
+	// Ok, if we want an deterministic id value such as an md5 of the email address as primary key
+	// compute the fct + field value
+	// one_to_many_update_parent_fields
+	newIDFormat := ""
+	isIdFormated := false
+	customIdFunction := strings.Split(p.Models.CustomId, ",")
+	if len(customIdFunction) >= 2 {
+		fct := customIdFunction[0]
+		fieldfc := customIdFunction[1]
+		// ie:  id: md5,email
+		if fct == "md5" {
+			if val, ok := mutation.Input[fieldfc]; ok {
+				hasher := md5.New()
+				hasher.Write([]byte(fmt.Sprintf("%v", val)))
+				newIDFormat = hex.EncodeToString(hasher.Sum(nil))
+				isIdFormated = true
+			} else {
+				// return missing create field
+				return nil, errors.New(fmt.Sprintf("Mising field '%s'", val))
+			}
 		} else {
-			// OK must fist create a new Parent item without the "current sk" ...
-			// we) will use the OneToMany "value" as "SK" (in a lower string format )
+			// Not yet defined
+			return nil, errors.New(fmt.Sprintf("Function not implemented '%s'", fct))
+		}
+	}
+
+	/*
+		id: md5,email
+		parent: plugin_key
+	*/
+	var childDynamoPutInput dynamodb.PutItemInput
+	var lstParentFields map[string]string
+	parentSKPrefix := ""
+	childSKSuffixField := ""
+	// if !isNextMutation {
+	if p.Models.OneToMany != "" {
+		hasChildMutation = true
+		lstParentFieldsTmp := strings.Split(strings.ToLower(p.Models.OneToManyUpdateFields), ",")
+		lstParentFields = make(map[string]string, 0)
+		for i, v := range lstParentFieldsTmp {
+			lstParentFields[v] = lstParentFieldsTmp[i]
+		}
+
+		// id: md5,email
+		if p.Models.OneToMany == "plugin_key" {
+			// Ok THIS IS AN METADATA ... we would create metadata and keep only  the proper fields ...
+			// SK will be {PLUGIN_KEY}#{MODELID}  (for metadata ... )
+			// SK Will be overided with thte PLUGIN_KEY prefix
+
+			// ok fill up
+			// childDynamoPutInput
+			parentSKPrefix = os.Getenv("SITE_KEY")
+		} else {
+			// Ok we might need to creeate a parent object first
+			childSKSuffixField = strings.ToLower(p.Models.OneToMany)
+			if existingID != "" {
+				// Ok we will only update the parent object to either add the field as part of the aray list, and other such as authors etc...
+				// based on the list arrayss
+				// fmt.Println(existingID)
+			} else {
+				// OK must fist create a new Parent item without the "current sk" ...
+				// we will use the OneToMany "value" as "SK" (in a lower string format )
+			}
 		}
 	} else {
 		// ?? reg create
 	}
+	// }
 
 	// Regular Create( from here )
 
@@ -526,10 +596,15 @@ func (p GenericHandler) HandleCreateGeneric(reqObj *acenteralib.RequestObject, i
 			}
 		}
 	}
+
 	if parent == "" {
 		dynamoPutInput = *p.Awslambda.CreateAppItemParent(taskName, elementType, site, "") // leave default sitei and sort key of active#ELEMENTTYPE#TS
 	} else {
 		dynamoPutInput = *p.Awslambda.CreateAppItemParentAndPlugin(taskName, elementType, parent, "", site, "") // leave default sitei and sort key of active#ElementTypetTT#TS
+	}
+
+	if isIdFormated {
+		dynamoPutInput.Item["id"].S = aws.String(newIDFormat)
 	}
 
 	// proj represents the Projection Expression
@@ -543,6 +618,27 @@ func (p GenericHandler) HandleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	fmt.Println(reqObj.Session)
 	mutation.Input["upk"] = reqObj.Session.Userid
 
+	// childSK := dynamoPutInput.Item["sk"].S
+	if hasChildMutation {
+		fmt.Println("PARENT WILL ONLY KEEP THE FOLLOWING FIELDS", lstParentFields)
+		origSK := *dynamoPutInput.Item["sk"].S
+		if childSKSuffixField != "" {
+			if v, ok := mutation.Input[childSKSuffixField]; ok {
+				origSK = origSK + "#" + v.(string)
+			} else {
+				// error
+				return nil, errors.New(fmt.Sprintf("Field '%s' missing", childSKSuffixField))
+			}
+		}
+		if !isNextMutation {
+			// Ok this is the parent
+			dynamoPutInput.Item["sk"].S = aws.String(parentSKPrefix + "#" + *dynamoPutInput.Item["sk"].S)
+		} else {
+			// Ok this is the child
+			dynamoPutInput.Item["sk"].S = aws.String(origSK)
+		}
+	}
+
 	// Override any values including sk if user wants it ...
 	exisingKeys := make(map[string]*dynamodb.AttributeValue, 0)
 	for lowerNameKey, attr := range dynamoPutInput.Item {
@@ -550,40 +646,54 @@ func (p GenericHandler) HandleCreateGeneric(reqObj *acenteralib.RequestObject, i
 		if lowerNameKey == "id" || lowerNameKey == "sk" {
 			// do not ad it to the update expressions
 		} else {
-			nameLower := expression.Name(lowerNameKey)
-			fmt.Println("Adding of ", nameLower)
-
-			// var actual *interface{}
-			// err := dynamodbattribute.Unmarshal(value, &actual)
-			// fmt.Println(err)
-			fmt.Println(attr)
-			fmt.Println("S is :")
-			proj = expression.AddNames(proj, nameLower)
-
-			value := expression.Value("")
-			if attr.S != nil {
-				value = expression.Value(attr.S)
-			} else if attr.N != nil {
-				value = expression.Value(attr.N)
-			} else if attr.B != nil {
-				value = expression.Value(attr.B)
-			} else if attr.BOOL != nil {
-				value = expression.Value(attr.BOOL)
-			} else if attr.BS != nil {
-				value = expression.Value(attr.BS)
-			} else if attr.L != nil {
-				value = expression.Value(attr.L)
-			} else if attr.M != nil {
-				value = expression.Value(attr.M)
-			} else if attr.NS != nil {
-				value = expression.Value(attr.NS)
-			} else if attr.NULL != nil {
-				value = expression.Value(attr.NULL)
-			} else if attr.SS != nil {
-				value = expression.Value(attr.SS)
+			isFieldOk := false
+			if hasChildMutation {
+				if _, ok := lstParentFields[lowerNameKey]; ok {
+					if !isNextMutation {
+						isFieldOk = true
+					}
+				} else {
+					if isNextMutation {
+						isFieldOk = true
+					}
+				}
+			} else {
+				isFieldOk = true
 			}
-			update = update.Set(nameLower, value)
 
+			if isFieldOk {
+				nameLower := expression.Name(lowerNameKey)
+				proj = expression.AddNames(proj, nameLower)
+
+				value := expression.Value("")
+				if attr.S != nil {
+					value = expression.Value(attr.S)
+				} else if attr.N != nil {
+					value = expression.Value(attr.N)
+				} else if attr.B != nil {
+					value = expression.Value(attr.B)
+				} else if attr.BOOL != nil {
+					value = expression.Value(attr.BOOL)
+				} else if attr.BS != nil {
+					value = expression.Value(attr.BS)
+				} else if attr.L != nil {
+					value = expression.Value(attr.L)
+				} else if attr.M != nil {
+					value = expression.Value(attr.M)
+				} else if attr.NS != nil {
+					value = expression.Value(attr.NS)
+				} else if attr.NULL != nil {
+					value = expression.Value(attr.NULL)
+				} else if attr.SS != nil {
+					value = expression.Value(attr.SS)
+				}
+				update = update.Set(nameLower, value)
+			} else {
+				/*if (hasChildMutation && !isNextMutation) {
+					childDynamoPutInput
+				}
+				*/
+			}
 		}
 	}
 	for k, v := range mutation.Input {
@@ -622,6 +732,13 @@ func (p GenericHandler) HandleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	}
 	// fmt.Println(exp.Update())
 
+	// Ok need to
+	if hasChildMutation {
+		if !isNextMutation {
+			mutation.Input["refid"] = *dynamoPutInput.Item["id"].S + "#" + *dynamoPutInput.Item["sk"].S
+		}
+	}
+
 	output, err := acenteralib.DynamoDB.UpdateItem(dynamoDdbUpdateInput)
 	fmt.Println(output)
 	fmt.Println(err)
@@ -641,7 +758,19 @@ func (p GenericHandler) HandleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	}
 
 	// TODO: Ned to return a UserPost Connection...
-	return &item, err
+
+	if hasChildMutation {
+		if !isNextMutation {
+			// Ok create the child element without the parent fields
+			return p.handleCreateGeneric(reqObj, identity, mutation, true, &childDynamoPutInput, &item)
+		} else {
+			// Ok we are the child, return the item
+			// TODO: Return the merged parent fields ???
+			return &item, err
+		}
+	} else {
+		return &item, err
+	}
 
 	/*
 		fmt.Println("Put item using.....")
@@ -711,6 +840,10 @@ func (p GenericHandler) InitializeRoutes(r resolvers.Repository) error {
 				err = r.Add(fmt.Sprintf("mutation.create%s", p.ActionWordSingular), p.HandleCreateGeneric)
 				err = r.Add(fmt.Sprintf("mutation.update%s", p.ActionWordSingular), p.HandleUpdateGeneric)
 				err = r.Add(fmt.Sprintf("mutation.delete%s", p.ActionWordSingular), p.HandleDeleteGeneric)
+
+				if p.Models.Admin == 1 {
+					err = r.Add(fmt.Sprintf("query.list%sAdmin", p.ActionWordPlurial), p.HandleListAdmin) // query.listPosts(listInput) with nextTokens
+				}
 			}
 		}
 	}

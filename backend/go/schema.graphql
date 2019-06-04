@@ -30,6 +30,12 @@ type Query {
   ): TasksConnection!
   getUserPublicInfo(input: ID!): UserPublic
   batchgetUserPublicInfo(input: [ID]!): [UserPublic]!
+  listUsers(
+    input: ListUsersSearchInput
+    limit: Int
+    nextToken: String
+  ): UserConnection!
+  listAllUsers: UserConnection!
 }
 
 type Mutation {
@@ -92,10 +98,10 @@ type Subscription {
   ): TasksInterface
 }
 
-type Author {
+type Author implements BaseObject {
+  userid: String!
   id: ID!
   title: String!
-  userid: String!
   status: String
   created: AWSDateTime
   updated: AWSDateTime
@@ -116,16 +122,17 @@ type S3Object {
   region: String
 }
 
-type PostListing implements PostInterface {
+type PostListing implements BaseObject & PostInterface {
+  languages: [LangEnum!]
   id: ID!
   title: String!
-  languages: [LangEnum!]
-  author_name: String!
+  status: String
   created: AWSDateTime
   updated: AWSDateTime
+  author_name: String!
 }
 
-type Post implements PostInterface {
+type Post implements BaseObject & PostInterface {
   lang: LangEnum!
   translations(lang: LangEnum): PostMetadataConnection
   comments(
@@ -139,9 +146,10 @@ type Post implements PostInterface {
   author: User!
   id: ID!
   title: String!
-  author_name: String!
+  status: String
   created: AWSDateTime
   updated: AWSDateTime
+  author_name: String!
 }
 
 type UserPost {
@@ -209,10 +217,10 @@ type PostConnection {
   nextToken: String
 }
 
-type Project {
+type Project implements BaseObject {
   id: ID!
   title: String!
-  status: String!
+  status: String
   created: AWSDateTime
   updated: AWSDateTime
 }
@@ -246,21 +254,23 @@ type CreateTasksOutput {
   query: Query
 }
 
-type TasksListing implements TasksInterface {
+type TasksListing implements BaseObject & TasksInterface {
   author_name: String!
   id: ID!
   title: String!
+  status: String
   created: AWSDateTime
   updated: AWSDateTime
 }
 
-type Tasks implements TasksInterface {
+type Tasks implements BaseObject & TasksInterface {
   author_p: String!
   id: ID!
   title: String!
-  author_name: String!
+  status: String
   created: AWSDateTime
   updated: AWSDateTime
+  author_name: String!
 }
 
 type TasksConnection {
@@ -271,16 +281,32 @@ type TasksConnection {
 type UserPublic {
   id: ID!
   title: String!
+  display_name: String
 }
 
-type User {
-  id: ID!
+type UserConnection {
+  before: String
+  after: String
+  hasAfter: Boolean
+  hasBefore: Boolean
+  items: [User!]!
+  nextToken: String
+}
+
+type User implements BaseObject {
   posts(
     limit: Int
     type: UserPostConnectionType
     nextToken: String
   ): UserPostConnection
   profilePicture: S3Object
+  email: String
+  display_name: String
+  firstName: String
+  lastName: String
+  id: ID!
+  title: String!
+  status: String
   created: AWSDateTime
   updated: AWSDateTime
 }
@@ -321,12 +347,16 @@ enum TaskstatusType {
   scheduled
 }
 
-interface PostInterface {
+interface BaseObject {
   id: ID!
   title: String!
-  author_name: String!
+  status: String
   created: AWSDateTime
   updated: AWSDateTime
+}
+
+interface PostInterface {
+  author_name: String!
 }
 
 interface TasksInterface {
@@ -403,4 +433,9 @@ input UpdateTaskInput {
 
 input DeleteTaskInput {
   id: ID!
+}
+
+input ListUsersSearchInput {
+  name: String
+  email: String
 }

@@ -61,6 +61,13 @@ export default {
   },
   error: {
     no_vpc_in_region: 'Aucun VPC\'s disponible dans la region {region}',
-    no_subnet_in_region_vpc: 'Aucun résau disponible en {region} pour le vpc {vpc}'
+    no_subnet_in_region_vpc: 'Aucun résau disponible en {region} pour le vpc {vpc}',
+    input: {
+      title: 'Vous devez spécifier un nom qui sera public',
+      email: 'Vous devez entrer une address email valide'
+    }
+  },
+  user: {
+    title: 'Nom Public'
   }
 }

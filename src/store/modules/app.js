@@ -102,6 +102,9 @@ const app = {
 
       return state.projects.length > 0
     },
+    projects: (state) => {
+      return state.projects
+    },
     project: (state) => {
       return state.project
     },

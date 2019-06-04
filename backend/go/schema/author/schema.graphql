@@ -2,13 +2,8 @@ nativetype Author {
     version: 1
 }
 
-type Author {
-  id: ID!
-  title: String!
+type Author implements BaseObject {
   userid: String!
-  status: String
-  created: AWSDateTime
-  updated: AWSDateTime
 }
 
 input ListAuthorsInput {

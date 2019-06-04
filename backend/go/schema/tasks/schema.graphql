@@ -84,11 +84,11 @@ interface TasksInterface {
 }
 
 # TasksListing should not have N+1 Queries ...
-type TasksListing implements TasksInterface {
+type TasksListing implements BaseObject & TasksInterface {
   author_name: String!
 }
 
-type Tasks implements TasksInterface {
+type Tasks implements BaseObject & TasksInterface {
   author_p: String!
 }
 

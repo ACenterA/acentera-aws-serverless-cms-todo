@@ -10,8 +10,8 @@ import AdminDashboard from '@/views/admin/Dashboard'
 import AdminProjects from '@/views/admin/Projects'
 import AdminProjectsCreate from '@/views/admin/Projects/Create'
 
-import AdminAuthors from '@/views/admin/Authors'
-import AdminAuthorsCreate from '@/views/admin/Authors/Create'
+import AdminUsers from '@/views/admin/Users'
+import AdminUsersCreate from '@/views/admin/Users/Create'
 
 import AdminSettingsLayout from '@/views/admin/settings/Layout'
 import AdminSettingsIndex from '@/views/admin/settings/Index'
@@ -260,13 +260,13 @@ export const routerValid = [
             ]
           },
           {
-            path: 'authors',
-            name: 'AdminAuthors',
+            path: 'users',
+            name: 'AdminUsers',
             layout: 'Layout',
             component: DefaultLayout,
             hidden: false,
             meta: {
-              title: 'Authors',
+              title: 'Users',
               hideMainMenu: true,
               showMenu: adminPluginNameMenu,
               // example: class: 'serverless-cms-container',
@@ -276,9 +276,9 @@ export const routerValid = [
             children: [
               {
                 path: 'list',
-                name: 'AdminAuthorsList',
+                name: 'AdminUsersList',
                 layout: 'Layout',
-                component: AdminAuthors,
+                component: AdminUsers,
                 hidden: false,
                 meta: {
                   title: 'List',
@@ -290,9 +290,9 @@ export const routerValid = [
               },
               {
                 path: 'create',
-                name: 'AdminAuthorsCreate',
+                name: 'AdminUsersCreate',
                 layout: 'Layout',
-                component: AdminAuthorsCreate,
+                component: AdminUsersCreate,
                 hidden: false,
                 meta: {
                   title: 'Create',

@@ -86,3 +86,4 @@ backend/go/shared/
 backend/schema.graphql
 backend/go/models.sam
 backend/go/graphql.sam
+backend/go/schema.graphql
