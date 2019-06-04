@@ -1,6 +1,10 @@
 # aws-serverless-cms-todo-app
 
-Vue.JS sample Project & Todo App
+[Jour our slacck community @ slack.acentera.com](https://slack.acentera.com/)
+
+---
+
+Vue.JS sample CMS Project & Todo App
 
 This repository is based on the [Vue Element Admin](https://github.com/PanJiaChen/vue-element-admin) Vue.JS admin.
 
