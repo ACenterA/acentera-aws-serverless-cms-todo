@@ -91,7 +91,7 @@ services:
       - "127.0.0.1:80:80"
 
   proxy:
-    image: acentera/prod:acentera-aws-core-proxy-0.0.1
+    image: acentera/prod:acentera-aws-core-proxy-0.0.2
     env_file:
        - .env
     networks:

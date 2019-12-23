@@ -3,6 +3,8 @@ package models
 import (
 	// "context"
 	// "github.com/aws/aws-lambda-go/lambda"
+	pluralize "github.com/gertd/go-pluralize"
+
 	"crypto/md5"
 	"log"
 
@@ -22,8 +24,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-
-	pluralize "github.com/gertd/go-pluralize"
 
 	"io/ioutil"
 
@@ -90,6 +90,7 @@ func (p GenericHandler) Initialize(r resolvers.Repository) error {
 	var c conf
 	yamlObjList := c.getConf()
 	fmt.Println(c)
+	pluralize := pluralize.NewClient()
 	for k, v := range yamlObjList.Models {
 		fmt.Println(" K :", k)
 		fmt.Println(" V :", v)

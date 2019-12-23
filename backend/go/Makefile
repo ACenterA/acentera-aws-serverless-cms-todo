@@ -35,7 +35,8 @@ dev: regen_graphql
 	make -j dev-watch dev-sam
 dev-sam:
 	sam local start-lambda --host 0.0.0.0 -p 3001 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} &
-	sam local start-api --force-image-build --debug --host 0.0.0.0 -p 3002 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -s web/static &
+	#sam local start-api --force-image-build --debug --host 0.0.0.0 -p 3002 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -s web/static &
+	sam local start-api --force-image-build --debug --host 0.0.0.0 -p 3000 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -s web/static &
 
 dev-watch:
 	watchexec -f '*.go' -r 'make -j handlers'

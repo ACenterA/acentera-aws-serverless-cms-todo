@@ -117,15 +117,16 @@ type AppBootstrapReq struct {
 func AppPluginSiteBootstrap(lib acenteralib.SharedLib, c *gin.Context, reqObj acenteralib.RequestObject) (events.APIGatewayProxyResponse, error) {
 	var appBootstrapReq AppBootstrapReq
 	c.BindJSON(&appBootstrapReq)
-	// fmt.Println("POST BOOTSTRAP TES 1T a")
+	fmt.Println("POST BOOTSTRAP TES 1T a")
 
 	lambdadAccountId := "-1"
 	stackName := os.Getenv("STACK_NAME")
-	// fmt.Println("IS IT SAM", os.Getenv("AWS_SAM_LOCAL"))
+	fmt.Println("IS IT SAM", os.Getenv("AWS_SAM_LOCAL"))
 	siteKey := os.Getenv("SITE_KEY")
 	if siteKey == "" {
 		siteKey = c.GetHeader("x-site")
 	}
+	fmt.Println("SAMKY ", siteKey)
 
 	hasher := md5.New()
 	hasher.Write([]byte(fmt.Sprintf("%v", "admin")))

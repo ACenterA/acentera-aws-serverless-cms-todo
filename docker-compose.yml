@@ -19,6 +19,7 @@ services:
           - serverless-cms-vue
     ports:
       - "127.0.0.1:81:80"
+      - "127.0.0.1:9528:80"
 
   serverless-cms-graphql:
     build:
