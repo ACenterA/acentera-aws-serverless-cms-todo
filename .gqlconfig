@@ -1,0 +1,6 @@
+/* .gqlconfig */
+{
+  schema: {
+    files: 'backened/go/schema/**/*.graphql'
+  }
+}

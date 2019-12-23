@@ -3,6 +3,7 @@ export default {
     date: 'Date',
     create: 'Creation',
     modification: 'Modification',
+    role: 'Role',
     add: 'Ajouter',
     status: 'Status',
     title: 'Titre',
@@ -64,10 +65,11 @@ export default {
     no_subnet_in_region_vpc: 'Aucun résau disponible en {region} pour le vpc {vpc}',
     input: {
       title: 'Vous devez spécifier un nom qui sera public',
-      email: 'Vous devez entrer une address email valide'
+      email: 'Vous devez entrer une address courrirel valide'
     }
   },
   user: {
-    title: 'Nom Public'
+    title: 'Nom Public',
+    email: 'Courriel'
   }
 }

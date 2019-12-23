@@ -143,7 +143,7 @@ func AppPluginSiteBootstrap(lib acenteralib.SharedLib, c *gin.Context, reqObj ac
 		}
 	}
 
-	fmt.Println("a - Comparing of ", lambdadAccountId, " with ", appBootstrapReq.Accountid)
+	fmt.Println("a - Comparing of ", lambdadAccountId, " with ", appBootstrapReq.Accountid, "SAM IS:", os.Getenv("AWS_SAM_LOCAL"))
 	if lambdadAccountId == fmt.Sprintf("%v", appBootstrapReq.Accountid) {
 		if lambdadAccountId != "" {
 			// nPluginInfo, errorPlugin := lib.GetPluginById(siteKey)

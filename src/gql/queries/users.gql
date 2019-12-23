@@ -1,0 +1,51 @@
+
+query USERS {
+  listUsers {
+    items {
+      id,
+      title,
+      email,
+      display_name,
+      status,
+      created,
+      updated
+    }
+  }
+}
+
+query listUsers($limit: Int, $nextToken: String) {
+  listUsers(
+    limit: $limit,
+    nextToken: $nextToken
+  ) {
+      items {
+        id,
+        title,
+        email,
+        display_name,
+        status,
+        created
+      },
+      nextToken
+  }
+}
+
+input AssignUserProjectRoleInput {
+  id: ID!
+  role: String!
+}
+
+mutation createUserProject($title: String!, $email: String! $projects: [AssignUserProjectRoleInput!]) {
+  createUserProject(
+    input: {
+      title: $title
+      email: $email
+      pojects: $projects
+    }
+  ) {
+    id
+    title
+    email
+    projects
+  }
+}

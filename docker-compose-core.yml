@@ -37,12 +37,14 @@ services:
       - /dev/shm:/dev/shm
       - ./go/:/lambda/
       - /var/run/docker.sock:/var/run/docker.sock:rw
+    env_file:
+       - .env
     environment:
        JWT_SECRET: "docker-compose-secret"
        STACK_ID: "arn:aws:cloudformation:us-east-1:123456789012:stack/local/51af3dc0-da77-11e4-872e-1234567db123"
        SESSION_TABLE_NAME: "app-data-sessions"
        SMS_CONFIG_ARN: ""
-       ADMIN_USERNAME: "admin@acentera.com"
+       ADMIN_USERNAME: ${ADMIN_USERNAME}
        AWS_LAMBDA_FUNCTION_HANDLER: "main"
        EMAIL_ENABLED: "false"
        SMS_CONFIG_EXTERNAL_ID: ""

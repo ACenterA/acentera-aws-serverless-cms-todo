@@ -9,6 +9,10 @@ nativetype User {
     one_to_many: plugin_key
     one_to_many_update_parent_fields: email,title
     # admin: 1
+    
+    resolvers: {
+       createUserProject: create
+    }
 }
 
 # Only Admin can see User objects
@@ -18,6 +22,29 @@ type UserPublic {
   display_name: String
 }
 
+type ProjectInfo {
+  id: ID!
+  title: String!
+  display_name: String
+}
+
+type UserProjects {
+  id: ID!
+  title: String!
+  email: String!
+  projects: [ProjectInfo]
+}
+
+input AssignUserProjectRoleInput {
+  id: ID!
+  role: String!
+}
+
+input CreateUsersProjectInput {
+  title: String
+  email: String
+  projects: [AssignUserProjectRoleInput]
+}
 
 input ListUsersSearchInput {
   name: String
@@ -48,4 +75,8 @@ type User implements BaseObject {
   display_name: String
   firstName: String
   lastName: String
+}
+
+type Mutation {
+  createUserProject(input: CreateUsersProjectInput): UserProjects!
 }

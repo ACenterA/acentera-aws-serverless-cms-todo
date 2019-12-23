@@ -4,60 +4,115 @@ models:
     Author:
       
         
-           version: 1
+           
+             version: 1
+           
         
       
   
     Post:
       
         
-           plurial: Posts
+           
+             plurial: Posts
+           
         
-           singular: post
+           
+             singular: post
+           
         
-           version: 1
+           
+             version: 1
+           
         
-           parent: project
+           
+             parent: project
+           
         
-           one_to_many: lang
+           
+             one_to_many: lang
+           
         
-           one_to_many_update_parent_fields: upk
+           
+             one_to_many_update_parent_fields: upk
+           
         
       
   
     Project:
       
         
-           plurial: Projects
+           
+             plurial: Projects
+           
         
-           singular: Project
+           
+             singular: Project
+           
         
-           version: 1
+           
+             version: 1
+           
         
       
   
     Task:
       
         
-           plurial: Tasks
+           
+             plurial: Tasks
+           
         
-           singular: task
+           
+             singular: task
+           
         
-           version: 1
+           
+             version: 1
+           
         
       
   
     User:
       
         
-           plurial: Users
+           
+             plurial: Users
+           
         
-           singular: user
+           
+             singular: user
+           
         
-           model: user
+           
+             model: user
+           
         
-           version: 1
+           
+             version: 1
+           
+        
+           
+             id: md5,email
+           
+        
+           
+             one_to_many: plugin_key
+           
+        
+           
+             one_to_many_update_parent_fields: email,title
+           
+        
+           
+             resolvers:
+               
+                  
+                     createUserProject: create
+                  
+               
+           
         
       
-   
+  
 

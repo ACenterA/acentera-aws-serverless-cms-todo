@@ -4,8 +4,22 @@ models:
     {{ .Name }}:
       {{ with .Props }}
         {{ range . }}
-           {{ .Name }}: {{ .Type }}
+           {{ if .IsMap }}
+             {{ .Name }}:
+               {{ range $k, $v := .Map }}
+                  {{ if $v.IsMap }}
+                    {{ $k }}:
+                    {{ range $k1, $v1 := .Map }}
+                      {{ $k1 }}: {{ $v1.Type }}
+                    {{ end }}
+                  {{ else }}
+                     {{ $k }}: {{ $v.Type }}
+                  {{ end }}
+               {{ end }}
+           {{ else }}
+             {{ .Name }}: {{ .Type }}
+           {{ end }}
         {{ end }}
       {{ end }}
-  {{ end }} 
+  {{ end }}
 {{ end }}

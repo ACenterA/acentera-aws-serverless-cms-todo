@@ -2,6 +2,7 @@ export default {
   table: {
     date: 'Date',
     title: 'Title',
+    role: 'Role',
     create: 'Creation',
     modification: 'Modification',
     add: 'Create',
@@ -64,10 +65,11 @@ export default {
     no_subnet_in_region_vpc: 'No subnets available in {region} for vpc {vpc}',
     input: {
       title: 'Missing Display Name',
-      email: 'Missing email address'
+      email: 'Missing or invalid email address'
     }
   },
   user: {
-    title: 'Public Name'
+    title: 'Public Name',
+    email: 'E-Mail'
   }
 }

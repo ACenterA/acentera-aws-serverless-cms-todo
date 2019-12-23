@@ -8,6 +8,7 @@
         "start": "nodemon -w .. -e js,yaml,gql,yml -- appsync-local.js -q"
     },
     "dependencies": {
+        "@playlyfe/gql": "^2.6.1",
         "bcryptjs": "^2.4.3",
         "graphql-s2s": "^0.20.0",
         "jsonwebtoken": "^8.1.1",

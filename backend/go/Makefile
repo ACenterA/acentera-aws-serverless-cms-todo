@@ -24,15 +24,18 @@ deploy-static: web/static/index.html
 	[ -n "$(DIST)" ] && aws cloudfront create-invalidation --distribution-id $(DIST) --paths '/*' || true
 	aws cloudformation describe-stacks --output text --query 'Stacks[*].Outputs' --stack-name $(APP)
 
-dev:
-	export GOOS=linux
+regen_graphql:
+	[ -e schema.graphql ] && rm -fr schema.graphql || true
 	gqlmerge ./schema schema.graphql
 	cp -f graphql.sam template.yml
 	cp -f models.sam handlers/app/conf.yaml
+	
+dev: regen_graphql
+	export GOOS=linux
 	make -j dev-watch dev-sam
 dev-sam:
-	sam local start-lambda --host 0.0.0.0 -p 3001 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -n env.json &
-	sam local start-api --force-image-build --debug --host 0.0.0.0 -p 3002 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -n env.json -s web/static &
+	sam local start-lambda --host 0.0.0.0 -p 3001 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} &
+	sam local start-api --force-image-build --debug --host 0.0.0.0 -p 3002 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -s web/static &
 
 dev-watch:
 	watchexec -f '*.go' -r 'make -j handlers'

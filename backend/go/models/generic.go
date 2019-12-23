@@ -43,18 +43,19 @@ var (
 )
 
 type Models struct {
-	Version               int64           `yaml:"version"`
-	Admin                 int64           `yaml:"admin"`
-	OneToMany             string          `yaml:"one_to_many"`
-	CustomId              string          `yaml:"id"`
-	OneToManyUpdateFields string          `yaml:"one_to_many_update_parent_fields"`
-	ModelID               string          `yaml:"model"`
-	Generic               int64           `yaml:"generic"`
-	Parent                string          `yaml:"parent"`
-	Plurial               string          `yaml:"plurial"`
-	Singular              string          `yaml:"singular"`
-	ClassName             string          `yaml:"class"`
-	Class                 *GenericHandler `yaml:"-"`
+	Version               int64                  `yaml:"version"`
+	Admin                 int64                  `yaml:"admin"`
+	OneToMany             string                 `yaml:"one_to_many"`
+	CustomId              string                 `yaml:"id"`
+	OneToManyUpdateFields string                 `yaml:"one_to_many_update_parent_fields"`
+	ModelID               string                 `yaml:"model"`
+	Generic               int64                  `yaml:"generic"`
+	Parent                string                 `yaml:"parent"`
+	Plurial               string                 `yaml:"plurial"`
+	Singular              string                 `yaml:"singular"`
+	ClassName             string                 `yaml:"class"`
+	Resolvers             map[string]interface{} `yaml:"resolvers"`
+	Class                 *GenericHandler        `yaml:"-"`
 }
 
 type conf struct {
@@ -493,7 +494,7 @@ func (p GenericHandler) HandleCreateGeneric(reqObj *acenteralib.RequestObject, i
 
 func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, identity map[string]interface{}, mutation createInputEvent, isNextMutation bool, nextItem *dynamodb.PutItemInput, parentItem *map[string]interface{}) (*map[string]interface{}, error) {
 	// TODO: Create if user is Admin
-	fmt.Println("Create Generic ...")
+	fmt.Println("Create Generic ... (A)")
 	elementType := p.ElementType
 	if elementType == "" {
 		elementType = mutation.Type
@@ -545,6 +546,7 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	if p.Models.OneToMany != "" {
 		hasChildMutation = true
 		lstParentFieldsTmp := strings.Split(strings.ToLower(p.Models.OneToManyUpdateFields), ",")
+		fmt.Println("GOT SPLIT FILEDSD OF ", lstParentFieldsTmp)
 		lstParentFields = make(map[string]string, 0)
 		for i, v := range lstParentFieldsTmp {
 			lstParentFields[v] = lstParentFieldsTmp[i]
@@ -702,15 +704,34 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 		if _, ok := exisingKeys[lowerNameKey]; ok {
 			// Already exists do not re-add
 		} else {
-			nameLower := expression.Name(lowerNameKey)
-			fmt.Println("Adding of ", nameLower)
-			value := expression.Value(v)
-			attrB, _ := dynamodbattribute.Marshal(v)
-			attributes[lowerNameKey] = attrB
-			dynamoPutInput.Item[lowerNameKey] = attrB
-			proj = expression.AddNames(proj, nameLower)
-			update = update.Set(nameLower, value)
-			fmt.Println("Adding done..")
+			isFieldOk := false
+			if hasChildMutation {
+				if _, ok := lstParentFields[lowerNameKey]; ok {
+					if !isNextMutation {
+						isFieldOk = true
+					}
+				} else {
+					if isNextMutation {
+						isFieldOk = true
+					}
+				}
+			} else {
+				isFieldOk = true
+			}
+
+			if isFieldOk {
+				nameLower := expression.Name(lowerNameKey)
+				fmt.Println("22 - Adding of ", nameLower)
+				value := expression.Value(v)
+				attrB, _ := dynamodbattribute.Marshal(v)
+				attributes[lowerNameKey] = attrB
+				dynamoPutInput.Item[lowerNameKey] = attrB
+				proj = expression.AddNames(proj, nameLower)
+				update = update.Set(nameLower, value)
+				fmt.Println("11 - Adding done..")
+			} else {
+				fmt.Println("Ignoring field: ", lowerNameKey)
+			}
 		}
 	}
 	fmt.Println("Ok Done..")
@@ -735,7 +756,8 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	// Ok need to
 	if hasChildMutation {
 		if !isNextMutation {
-			mutation.Input["refid"] = *dynamoPutInput.Item["id"].S + "#" + *dynamoPutInput.Item["sk"].S
+			mutation.Input["ref_id"] = *dynamoPutInput.Item["id"].S
+			mutation.Input["ref_sk"] = *dynamoPutInput.Item["sk"].S
 		}
 	}
 
@@ -843,6 +865,16 @@ func (p GenericHandler) InitializeRoutes(r resolvers.Repository) error {
 
 				if p.Models.Admin == 1 {
 					err = r.Add(fmt.Sprintf("query.list%sAdmin", p.ActionWordPlurial), p.HandleListAdmin) // query.listPosts(listInput) with nextTokens
+				}
+
+				fmt.Println("DID WE GOT RESEOLVERS?", p.Models.Resolvers)
+				for v, k := range p.Models.Resolvers {
+					fmt.Println("Adding custom resolvers : ", fmt.Sprintf("mutation.%s", v), " for :", k.(string))
+					if k.(string) == "create" {
+						fmt.Println("Added custom resolvers : ", fmt.Sprintf("mutation.%s", v), " for : creaete generic")
+						err = r.Add(fmt.Sprintf("mutation.%s", v), p.HandleCreateGeneric)
+						fmt.Println("ERR IS :", err)
+					}
 				}
 			}
 		}

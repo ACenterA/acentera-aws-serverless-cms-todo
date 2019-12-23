@@ -1,0 +1,17 @@
+{{ with .List }}
+  {{ range . }}
+    {{ . }}
+  {{ end }} 
+{{ end }}
+  
+AppSyncModelPostsCreateMutationResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId:
+        Fn::GetAtt: 'GraphApi.ApiId'
+      TypeName: Mutation
+      FieldName: createPost
+      DataSourceName:
+        Fn::GetAtt: "AppSyncModelDataSource.Name"
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke", "payload": { "resolve": "mutation.createPost", "context": $utils.toJson($context) } }'
+      ResponseMappingTemplate: '$util.toJson($context.result)'

@@ -44,14 +44,11 @@ import Sticky from '@/components/Sticky'
 import { validateEmail } from '@/utils/validate'
 // import Warning from './Warning'
 import { ListProjects } from './Dropdown'
-import { createUserMutation } from '@/gql/queries/users.gql'
+import { createUserProject } from '@/gql/queries/users.gql'
 
 const defaultForm = {
-  status: 'active',
   title: '',
   email: '',
-  role: 'editor',
-  id: undefined,
   projects: []
 }
 
@@ -106,21 +103,12 @@ export default {
         // image_uri: [{ validator: validateRequire }],
         title: [{
           validator: validateRequire
-        }],
-        content: [{ validator: validateRequire }]
-        // source_uri: [{ validator: validateSourceUri, trigger: 'blur' }]
+        }]
       }
     }
   },
   apollo: {
     $client() {
-      console.error('APOLLO CLIENT')
-      console.error(window.Apollo)
-      console.error('APOLLO CLIENT EST ')
-      console.error(this.activeClient)
-      // console.error(this.$store.getters.apollo)
-      // return this.$store.getters.apollo
-      // return window.Apollo
       return this.activeClient // window.Apollo // this.activeClient
     }
   },
@@ -151,8 +139,6 @@ export default {
           role: product.role
         }
       })
-      console.error('wtf 1 ')
-      console.error(this.userForm)
     },
     fetchData(id) {
       /*
@@ -170,22 +156,23 @@ export default {
     submitForm() {
       this.userForm.display_time = parseInt(this.display_time / 1000)
       // console.log(this.userForm)
-      var _self = this
+      // var _self = this
       this.$refs.userForm.validate(valid => {
         if (valid) {
           // const { title } = this.$data.userForm
           // const optimisticId = '' + Math.round(Math.random() * -1000000)
           var userVariables = this.userForm
-          userVariables.project = _self.projectid
           // var status = 'active'
           this.loading = true
           console.error(userVariables)
           try {
             this.$apollo.mutate({
-              mutation: createUserMutation,
+              mutation: createUserProject,
               variables: userVariables,
               // see https://github.com/Akryum/vue-apollo-todos
               update: (store, { data: { createUser }}) => {
+                console.error('got responsee')
+                console.error(createUser)
                 /*
                 // Add to ALL PROJECT list
                 var queryKey = ALL_PROJECTS
@@ -311,30 +298,6 @@ export default {
           return false
         }
       })
-    },
-    draftForm() {
-      if (this.userForm.content.length === 0 || this.userForm.title.length === 0) {
-        this.$message({
-          message: 'No content or user title',
-          type: 'warning'
-        })
-        return
-      }
-      this.$message({
-        message: 'Draft created...',
-        type: 'success',
-        showClose: true,
-        duration: 1000
-      })
-      // this.userForm.status = 'draft'
-    },
-    getRemoteUserList(query) {
-      /*
-      userSearch(query).then(response => {
-        if (!response.data.items) return
-        this.userListOptions = response.data.items.map(v => v.name)
-      })
-      */
     }
   }
 }
