@@ -886,7 +886,7 @@
     "serve-static": "1.13.2",
     "set-blocking": "2.0.0",
     "set-immediate-shim": "1.0.1",
-    "set-value": "2.0.0",
+    "set-value": "2.0.1",
     "setimmediate": "1.0.5",
     "setprototypeof": "1.1.0",
     "sha.js": "2.4.11",
