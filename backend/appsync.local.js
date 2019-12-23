@@ -351,12 +351,19 @@ serverless-cms-graphql_1  | undefined
                 console.log("Invoking lambda function with payload...");
                 console.log(lambdaEndpoint);
                 console.log(payload);
+
+		console.error('IF WE WANT TO MOCK WE COULD TAKE THIS PAYLOAD, and INSTED OF CALLING ')
+		console.error('basically instead of calling await lambda.invoke(paams).....')
+		console.error(payload.resolve);
+		// { resolve: 'query.listAllProject
+
 		var lambda = new AWS.Lambda({maxRetries: 1});
 		var params = {
 		  FunctionName: 'ModelLambda',
 		  Payload: JSON.stringify(payload)
 		};
 
+		// Replace this if we want to use mock data.... or other.......
 		const lambdaResult = await lambda.invoke(params).promise();
 
 		// new Lambda({ region: 'us-east-1', endpoint: 'http://docker.for.mac.localhost:3001' })
