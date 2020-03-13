@@ -71,6 +71,11 @@ func RegisterRoutes(r *gin.Engine) {
 	r.POST(fmt.Sprintf("/api/plugins/%s/setup/bootstrap", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.AppPluginSiteBootstrap))
 	r.GET(fmt.Sprintf("/api/plugins/%s/settings", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.GetSettings))
 
+	r.GET("/api/internal/test", Awslambda.PluginNotifyAPIGateway(gofaas.ExecuteFast))
+	r.POST("/api/internal/test", Awslambda.PluginNotifyAPIGateway(gofaas.ExecuteFast))
+	r.GET("/test", Awslambda.PluginNotifyAPIGateway(gofaas.ExecuteFast))
+	r.POST("/test", Awslambda.PluginNotifyAPIGateway(gofaas.ExecuteFast))
+
 	// Add any others
 	// authenticated ones are, examle
 	r.GET(fmt.Sprintf("/api/plugins/%s/me", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGatewayJWTSecured(gofaas.GetMe))
@@ -93,19 +98,38 @@ func main() {
 	// if (os.Getenv("PLUGIN_ACTION") == "Authorizer") {
 	// lambda.Start(gofaas.NotifyAPIGatewayJWTAuth(gofaas.AuthorizerHandler))
 	// } else {
+
 	if os.Getenv("RUNWS") != "" {
 		r := gin.Default()
 		RegisterRoutes(r)
-		r.Run(":3000") // listen and serve on 0.0.0.0:8080
+		fmt.Println("TEST PORT A\n")
+		THEPORT := os.Getenv("CUSTOM_PORT")
+		fmt.Println("TEST PORT A " + THEPORT + "\n")
+		if THEPORT == "" {
+			THEPORT = "3000"
+		}
+		fmt.Println("TEST PORT B " + THEPORT + "\n")
+		r.Run(":" + THEPORT) // listen and serve on 0.0.0.0:8080
 	} else {
 		if os.Getenv("TYPE") == "WEBSITE" {
 			lambda.Start(Awslambda.NotifyAPIGateway(WebsitePublic))
+		} else if os.Getenv("TYPE") == "MODELSWS" {
+			lambda.Start(Awslambda.NotifyAppSyncJWTSecure(ExecuteFast))
 		} else if os.Getenv("TYPE") == "MODELS" {
 			lambda.Start(Awslambda.NotifyAppSyncJWTSecure(Execute))
 		} else {
 			lambda.Start(Handler)
 		}
 	}
+}
+
+func ExecuteFast(sharedlib acenteralib.SharedLib, ctx context.Context, reqObj acenteralib.RequestObject, e resolvers.Invocation) (interface{}, error) {
+	fmt.Println("GOT REQUEST HERE OF\n")
+	fmt.Println(ctx)
+	fmt.Println(reqObj)
+	fmt.Println(e)
+	fmt.Println("======\n")
+	return r.Handle(e, reqObj)
 }
 
 func Execute(sharedlib acenteralib.SharedLib, ctx context.Context, reqObj acenteralib.RequestObject, e resolvers.Invocation) (interface{}, error) {

@@ -289,9 +289,12 @@ serverless-cms-graphql_1  | undefined
             console.error(dataSources)
             console.error(dataSourceName)
             if (dataSources[dataSourceName] !== undefined) {
-                lambdaEndpoint = `http://${process.env.LOCAL_LAMBDA_HOST}:${
-                    process.env.LOCAL_LAMBDA_PORT
-                }/2015-03-31/functions/${dataSources[dataSourceName]}/invocations`;
+                //lambdaEndpoint = `http://${process.env.LOCAL_LAMBDA_HOST}:${
+                //    process.env.LOCAL_LAMBDA_PORT
+                //}/2015-03-31/functions/${dataSources[dataSourceName]}/invocations`;
+                lambdaEndpoint = `http://${process.env.LOCAL_LAMBDA_HOST}:3003/api/internal/2015-03-31/functions/${dataSources[dataSourceName]}/invocations`;
+                console.error('GOT : ' + `http://${process.env.LOCAL_LAMBDA_HOST}:3003/api/internal/${dataSourceName}`);
+                lambdaEndpoint = `http://${process.env.LOCAL_LAMBDA_HOST}:3003/api/internal/test`;
             } else {
                 console.log(
                     chalk.black.bgYellow("WARNING"),
@@ -364,22 +367,29 @@ serverless-cms-graphql_1  | undefined
 		};
 
 		// Replace this if we want to use mock data.... or other.......
+		// ACE FIX LAMBDA / HTTP
+		/*   
 		const lambdaResult = await lambda.invoke(params).promise();
+		*/
 
 		// new Lambda({ region: 'us-east-1', endpoint: 'http://docker.for.mac.localhost:3001' })
-		/*
-                const response = await axios.post(lambdaEndpoint, payload, {
+		    //
+                const lambdaResult = await axios.post(lambdaEndpoint, params, {
                     headers: {
                         Accept: "application/json",
                         "Content-Type": "application/json"
                     }
                 });
-		*/
 
 		console.error('received of ')
-		console.error(lambdaResult)
+		// console.error(lambdaResult)
 		console.error(lambdaResult.Payload)
-                const rr  = JSON.parse(lambdaResult.Payload);
+                var rr  = null
+		if ( lambdaResult.Payload ) {
+		  rr = JSON.parse(lambdaResult.Payload);
+	  	} else {
+		  rr = lambdaResult.data
+		}
                 const data = rr
                 console.error(data);
                 if (data.errorMessage !== undefined) {

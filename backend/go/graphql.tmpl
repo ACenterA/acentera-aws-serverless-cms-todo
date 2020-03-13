@@ -277,6 +277,56 @@ Resources:
          - DynamoDBCrudPolicy:
             TableName: "acentera-<%STAGE%>-Sessions"
 
+  ApiInternalApp:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./handlers/app
+      Timeout: 60
+      Events:
+        GetRequest:
+          Properties:
+            Method: GET
+            Path: /api/internal/{proxy+}
+            RestApiId: 
+              Ref: PluginRestApi
+          Type: Api
+        PostRequest:
+          Properties:
+            Method: POST
+            Path: /api/internal/{proxy+}
+            RestApiId: 
+              Ref: PluginRestApi
+          Type: Api
+        PutRequest:
+          Properties:
+            Method: PUT
+            Path: /api/internal/{proxy+}
+            RestApiId: 
+              Ref: PluginRestApi
+          Type: Api
+        DeleteRequest:
+          Properties:
+            Method: DELETE
+            Path: /api/internal/{proxy+}
+            RestApiId: 
+              Ref: PluginRestApi
+          Type: Api
+      # FunctionName: !Sub acentera-${AWS::StackName}-<%STAGE%>-Api
+      Runtime: go1.x
+      Environment:
+        Variables:
+          TYPE: "MODELSWS"
+      Policies:
+         # Use of * due to /index/ for gsi queries...
+         - DynamoDBCrudPolicy:
+            TableName: "acentera-<%STAGE%>-AppData"
+         - DynamoDBCrudPolicy:
+            TableName: "acentera-<%STAGE%>-AppData/index/*"
+         - DynamoDBCrudPolicy:
+            TableName: "acentera-<%STAGE%>-AppDataPermissions"
+         - DynamoDBCrudPolicy:
+            TableName: "acentera-<%STAGE%>-Sessions"
+
   ApiPluginSettings:
     Type: AWS::Serverless::Function
     Properties:

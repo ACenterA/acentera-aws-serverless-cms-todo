@@ -4,8 +4,8 @@ services:
     image: acentera/prod:acentera-aws-dynamodb-0.0.1
     volumes:
      - dynamodb:/data/
-    ports:
-     - "127.0.0.1:8000:8000"
+#    ports:
+#     - "127.0.0.1:8000:8000"
     command: |
       -jar /home/dynamodblocal/DynamoDBLocal.jar -dbPath /data/ -sharedDb -cors '*'
     networks:
@@ -24,9 +24,21 @@ services:
       AWS_DEFAULT_REGION: local
       AWS_ACCESS_KEY_ID: local
       AWS_SECRET_ACCESS_KEY: local
-    ports:
-      - "127.0.0.1:8001:8001"
+#    ports:
+#      - "127.0.0.1:8001:8001"
+
+    labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_dynamodb.rule=Host(`dynamodb.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_dynamodb.entrypoints=http"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_dynamodb.rule=Host(`dynamodb.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_dynamodb.entrypoints=https"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_dynamodb.tls=true"
+     - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}_https_dynamodb.redirectscheme.scheme=https"
+     - "traefik.http.services.${COMPOSE_PROJECT_NAME}_https_dynamodb.loadbalancer.server.port=8001"
+
     networks:
+      traeffik:
       backend:
         aliases:
           - dynamodb-admin
@@ -63,47 +75,90 @@ services:
        APP_DATA_TABLE_NAME: "app-data"
        STAGE: ""
        RUNWS: "true"
-    ports:
-     - "127.0.0.1:3000:3000"
-       # old cmd #make dev
+#    ports:
+#     - "127.0.0.1:3000:3000"
+#       # old cmd #make dev
     command:
       /go/src/github.com/nzoschke/gofaas/handlers/app/main
 
     networks:
+      traeffik:
       backend:
         aliases:
           - core
 
   core-vue:
-    image: acentera/prod:acentera-aws-core-vuejs-0.0.2
+    image: acentera/prod:acentera-aws-core-vuejs-0.0.4
     environment:
        HOST: 0.0.0.0
        PORT: 80
+       SOCKPORT: 80
+       SOCKHOST: http://cms.dev.acentera
+       #cms.dev.acentera
+       #SOCKPORT: 443
+       HTTPS: "true"
+       PUBLIC: http://cms.dev.acentera
        DEV_ACCOUNTID: ${DEV_ACCOUNTID}
        ENV_CONFIG: ${ENV_CONFIG}
-       API_HOST: 127.0.0.1
+       BAD_API_HOST: 127.0.0.1
+       FULL_BASE_API: https://apiproxy.dev.acentera/api/
+       FULL_BASE_PLUGIN_URL: https://apiproxy.dev.acentera
+       FULL_GRAPHQL_LOCAL_URL: https://graphql.dev.acentera
        SITE_TITLE: ${SITE_TITLE}
     networks:
+      traeffik:
       backend:
         aliases:
           - core-vue
-    ports:
-      - "127.0.0.1:80:80"
+
+    labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_cms.rule=Host(`cms.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_cms.entrypoints=http"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_cms.rule=Host(`cms.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_cms.entrypoints=https"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_cms.tls=true"
+     - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}_https_cms.redirectscheme.scheme=https"
+     - "traefik.http.services.${COMPOSE_PROJECT_NAME}_https_cms.loadbalancer.server.port=80"
+     - "traefik.http.services.${COMPOSE_PROJECT_NAME}_https_cms.loadbalancer.server.scheme=https"
+
+#    ports:
+#      - "127.0.0.1:80:80"
 
   proxy:
-    image: acentera/prod:acentera-aws-core-proxy-0.0.2
+    image: acentera/prod:acentera-aws-core-proxy-0.0.4
     env_file:
        - .env
     networks:
+      traeffik:
       backend:
         aliases:
           - proxy
-    ports:
-      - "127.0.0.1:2000:2000"
+    environment:
+      CORE: 'core:3000'
+      # TODO: We should have an array of ... or something
+      PLUGIN_PORT: '3003'
+      PLUGIN_NAME: 'serverless-cms'
+#    ports:
+#      - "127.0.0.1:2000:2000"
+
+    labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_apiproxy.rule=Host(`apiproxy.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_apiproxy.entrypoints=http"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_apiproxy.rule=Host(`apiproxy.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_apiproxy.entrypoints=https"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_apiproxy.tls=true"
+     - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}_https_apiproxy.redirectscheme.scheme=https"
+     - "traefik.http.services.${COMPOSE_PROJECT_NAME}_https_apiproxy.loadbalancer.server.port=2000"
 
 networks:
     backend:
       name: ${COMPOSE_PROJECT_NAME}_backend
+
+    traeffik:
+       external:
+          name: acentera-backend
 
 volumes:
    dynamodb:

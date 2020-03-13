@@ -66,7 +66,10 @@ func (c *conf) getConf() *conf {
 
 	yamlFile, err := ioutil.ReadFile("conf.yaml")
 	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
+	        yamlFile, err = ioutil.ReadFile("./handlers/app/conf.yaml")
+	        if err != nil {
+			log.Printf("yamlFile.Get err   #%v ", err)
+		}
 	}
 	err = yaml.Unmarshal(yamlFile, c)
 	if err != nil {

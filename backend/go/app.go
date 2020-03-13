@@ -5,6 +5,7 @@ import (
 	"fmt"
 	// "time"
 	"os"
+	//"io/ioutil"
 	"strings"
 
 	// "math/rand"
@@ -35,6 +36,8 @@ import (
 	// "github.com/aws/aws-sdk-go/service/kms"
 	// "github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/acenteracms/acenteralib"
+	models "github.com/myplugin/gofaas/models"
+	resolvers "github.com/sbstjn/appsync-resolvers"
 )
 
 /*
@@ -62,6 +65,48 @@ filter, err := GetFilter.(func() (acenteralib.SharedLib, error))()
 Awslambda = filter
 }
 */
+type AppModelPayloadReq struct {
+	FunctionName string  `json:"FunctionName"` // Used to validate account id vs AWS::AccountID ...
+	Payload      string  `json:"Payload"`
+}
+
+func ExecuteFast(lib acenteralib.SharedLib, c *gin.Context, reqObj acenteralib.RequestObject) (events.APIGatewayProxyResponse, error) {
+		        fmt.Println("GOT REQOBJ LIB OF ", reqObj)
+		        fmt.Println("GOT CONTEXT OF ")
+		        // fmt.Println(c)
+		        // fmt.Println("GOT EVENT PROXY REQUEST OF ")
+		        //fmt.Println(c)
+		        fmt.Println("aAA - AUTHORIZER OF ")
+		        fmt.Println(reqObj)
+		        fmt.Println("FF - DONE....")
+
+	var appPayloadReq AppModelPayloadReq
+	c.BindJSON(&appPayloadReq)
+
+//	x, _ := ioutil.ReadAll(c.Request.Body)
+  //      fmt.Printf("%s", string(x))
+        fmt.Println("GG - DONE....")
+        fmt.Printf("%s", string(appPayloadReq.Payload))
+
+        data := resolvers.Invocation{}
+	json.Unmarshal([]byte(string(appPayloadReq.Payload)), &data)
+
+	fmt.Println(data)
+
+	var r = resolvers.New()
+	fmt.Println("Returning response...")
+	//return acenteralib.RestResponseNoCache(r.Handle(data, reqObj))
+
+	genHandlerObject := &models.GenericHandler{Awslambda: lib}
+	genHandlerObject.Initialize(r)
+
+	f, er := r.Handle(data, reqObj)
+	fmt.Println("AAA")
+	fmt.Println(f)
+	fmt.Println(er)
+	// respObj := &PluginSettings{}
+	return acenteralib.RestResponseNoCache(f)
+}
 
 func GetSettings(lib acenteralib.SharedLib, c *gin.Context, reqObj acenteralib.RequestObject) (events.APIGatewayProxyResponse, error) {
 	// We need to know what is the current API Gateway ... ???

@@ -64,10 +64,10 @@ Using Docker Compose only
 
 | Endpoint Name  | Value          | Info  |
 | ------------- |---------------| -----:|
-| Vue.JS App | http://127.0.0.1/ | Vue.JS App |
-| DynamoDB   | http://127.0.0.1:8001/ | DynamoDB Tables |
-| GraphQL    | http://127.0.0.1:4000/ | Apollo GraphQL Server |
-| API Gateway Proxy | http://127.0.0.1:2000/ | API Gateway Proxy (acentera core or plugin routing) |
+| Vue.JS App | http://cms.dev.acentera/ | Vue.JS App (https doesnt support hot reload nodejs-sock issues) |
+| DynamoDB   | https://dynamodb.dev.acentera/ | DynamoDB Tables |
+| GraphQL    | https://graphql.dev.acentera/ | Apollo GraphQL Server |
+| API Gateway Proxy | https://apiproxy.dev.acentera/ | API Gateway Proxy (acentera core or plugin routing) |
 
 # Launching using AWS Serverless Repo
 

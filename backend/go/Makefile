@@ -32,17 +32,35 @@ regen_graphql:
 	
 dev: regen_graphql
 	export GOOS=linux
-	make -j dev-watch dev-sam
+	mkdir -p /opt; ln -snf /go/src/github.com/acenteracms/acenteralib/aws.so /opt/aws.so
+	#make -j dev-watch dev-sam dev-local
+
+dev-go:
+	kill -9 "$$(cat /tmp/sam3.pid)" || true
+	while [ -z "$$(find /go/src/github.com/myplugin/gofaas/handlers/app/. -newer /go/src/github.com/myplugin/gofaas/handlers/app/.main)" ]; do \
+		echo "Waiting loop.."; \
+		/bin/sleep 5; \
+	done
+	echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main & echo $$! > /tmp/sam3.pid; }
+
 dev-sam:
-	sam local start-lambda --host 0.0.0.0 -p 3001 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} &
-	#sam local start-api --force-image-build --debug --host 0.0.0.0 -p 3002 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -s web/static &
-	sam local start-api --force-image-build --debug --host 0.0.0.0 -p 3000 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -s web/static &
+	kill -9 "$$(cat /tmp/sam.pid)" || true
+	echo "Start lambda" && { sam local start-lambda --host 0.0.0.0 -p 3001 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} & echo $$! > /tmp/sam1.pid; }
+	kill -9 "$$(cat /tmp/sam2.pid)" || true
+	echo "Launching INVOKE" && { sam local start-api --force-image-build --debug --host 0.0.0.0 -p 3000 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -s web/static & echo $$! > /tmp/sam2.pid; }
+	#kill -9 "$$(cat /tmp/sam3.pid)" || true
+	#echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main & echo $$! > /tmp/sam3.pid; }
+	#echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main; }
 
 dev-watch:
-	watchexec -f '*.go' -r 'make -j handlers'
+	go build -i
+	mkdir -p /opt; ln -snf /go/src/github.com/acenteracms/acenteralib/aws.so /opt/aws.so
+	watchexec -f '*.yml' -s SIGKILL -r 'make -j dev-sam' &
+	watchexec -f '*.go' -s SIGKILL -r 'make -j handlers dev-go'
 
 HANDLERS=$(addsuffix main,$(wildcard handlers/*/))
-$(HANDLERS): handlers/%/main: *.go handlers/%/main.go vendor
+$(HANDLERS): handlers/%/main: *.go handlers/%/main.go
+#$(HANDLERS): handlers/%/main: *.go handlers/%/main.go vendor
 	if [ "$(dir $@)" = "handlers/website-public/" -o "$(dir $@)" = "handlers/migration/" ]; then cd ./$(dir $@) && GOOS=linux go build -ldflags "-s -w" -tags=test -o main .; else cd ./$(dir $@) && GOOS=linux go build -ldflags "-s -w" -o main .; fi;
 	if [ "$(dir $@)" = "handlers/shell/" ]; then cd ./$(dir $@) && env GOOS=linux GOARCH=arm64 GOARM=5 go build -o main-arm .; fi;
 	if [ "$(dir $@)" = "handlers/app/" ]; then cd ./$(dir $@) && cp -f *.yaml /go/src/github.com/acenteracms/acenteralib/. && cp -f main /go/src/github.com/acenteracms/acenteralib/. && cd /go/src/github.com/acenteracms/acenteralib/ && ./main; fi;
@@ -51,7 +69,12 @@ HANDLERS_JS=$(addsuffix node_modules,$(wildcard web/handlers/*/))
 $(HANDLERS_JS): web/handlers/%/node_modules: web/handlers/%/package.json
 	cd ./$(dir $@) && npm install && node-prune >/dev/null && touch node_modules
 
-handlers: handlers-go handlers-js
+rmtest:
+	if [ -e /go/src/github.com/myplugin/gofaas/handlers/app/main ]; then \
+		echo > /go/src/github.com/myplugin/gofaas/handlers/app/.main; \
+	fi
+
+handlers: rmtest handlers-go handlers-js
 handlers-go: $(HANDLERS)
 handlers-js: $(HANDLERS_JS)
 
