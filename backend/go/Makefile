@@ -41,7 +41,7 @@ dev-go:
 		echo "Waiting loop.."; \
 		/bin/sleep 5; \
 	done
-	echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main & echo $$! > /tmp/sam3.pid; }
+	env > /tmp/kkkkkkkl && echo "Launching Fast GO" && { SKIP_COGNITO=true SITE=${PLUGIN_KEY} AWS_SECRET_ACCESS_KEY=a AWS_ACCESS_KEY_ID=a AWS_SAM_LOCAL=true CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main & echo $$! > /tmp/sam3.pid; }
 
 dev-sam:
 	kill -9 "$$(cat /tmp/sam.pid)" || true
@@ -56,7 +56,7 @@ dev-watch:
 	go build -i
 	mkdir -p /opt; ln -snf /go/src/github.com/acenteracms/acenteralib/aws.so /opt/aws.so
 	watchexec -f '*.yml' -s SIGKILL -r 'make -j dev-sam' &
-	watchexec -f '*.go' -s SIGKILL -r 'make -j handlers dev-go'
+	((sleep 5 && touch handlers/app/main.go &)); watchexec -f '*.go' -s SIGKILL -r 'make -j handlers dev-go'
 
 HANDLERS=$(addsuffix main,$(wildcard handlers/*/))
 $(HANDLERS): handlers/%/main: *.go handlers/%/main.go

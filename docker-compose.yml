@@ -35,6 +35,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-graph
+    env_file:                                                                                     
+       - .env            
     volumes:
       - ./backend/appsync.local.js:/usr/app/appsync.local.js
       - ./backend/go/schema.graphql:/usr/app/schema.graphql
@@ -42,6 +44,10 @@ services:
     environment:
        LOCAL_LAMBDA_HOST: serverless-cms
        LOCAL_LAMBDA_PORT: 3000
+       PLUGINNAME: ${PLUGIN_NAME}                                                                  
+       PLUGIN_NAME: ${PLUGIN_NAME}                                                  
+       PluginName: ${PLUGIN_NAME}                                          
+       SITE_KEY: ${PLUGIN_KEY}                                                                    
     networks:
       traeffik:
       backend:

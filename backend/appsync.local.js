@@ -371,17 +371,25 @@ serverless-cms-graphql_1  | undefined
 		/*   
 		const lambdaResult = await lambda.invoke(params).promise();
 		*/
+		//const lambdaResult = await lambda.invoke(params).promise();
 
 		// new Lambda({ region: 'us-east-1', endpoint: 'http://docker.for.mac.localhost:3001' })
 		    //
+		    console.error('req is')
+		    console.error(JSON.stringify(context.request.headers['x-token']))
                 const lambdaResult = await axios.post(lambdaEndpoint, params, {
                     headers: {
                         Accept: "application/json",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        "x-token": context.request.headers['x-token'],
+                        "X-Token": context.request.headers['x-token'],
+                        "X-Site": process.env.PLUGIN_KEY,
+                        "X-Plugin": process.env.PLUGIN_NAME
                     }
                 });
-
 		console.error('received of ')
+		console.error('sending of')
+		console.error(JSON.stringify(process.env))
 		// console.error(lambdaResult)
 		console.error(lambdaResult.Payload)
                 var rr  = null

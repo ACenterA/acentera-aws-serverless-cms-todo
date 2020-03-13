@@ -3,6 +3,7 @@ package gofaas
 import (
 	"context"
 	"os"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -165,7 +166,7 @@ func NotifyAPIGateway(h HandlerAPIGateway) HandlerAPIGateway {
 
 var (
 	sess = session.Must(session.NewSession(&aws.Config{
-		Endpoint:   aws.String(IfThenElse(os.Getenv("AWS_SAM_LOCAL") == "true", "http://172.17.0.1:8000", "")),
+		Endpoint:   aws.String(IfThenElse(os.Getenv("AWS_SAM_LOCAL") == "true", "http://dynamodb:8000", "")),
 		MaxRetries: aws.Int(5),
 	},
 	))
@@ -178,6 +179,9 @@ var (
 )
 
 func NewDynamoDB() DynamoDBAPI {
+	fmt.Println("OK TEST DYNAMO OF")
+	fmt.Println(IfThenElse(os.Getenv("AWS_SAM_LOCAL") == "true", "http://dynamodb:8000", ""))
+	fmt.Println("OK TEST DYNAMO OF - 1")
 	c := dynamodb.New(sess)
 	// xray.AWS(c.Client)
 	return c

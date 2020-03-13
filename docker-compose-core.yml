@@ -4,10 +4,12 @@ services:
     image: acentera/prod:acentera-aws-dynamodb-0.0.1
     volumes:
      - dynamodb:/data/
+     - ./DynamoDBLocal.jar:/home/dynamodblocal/DynamoDBLocal.jar
+     - ./DynamoDBLocal_lib:/home/dynamodblocal/DynamoDBLocal_lib
 #    ports:
 #     - "127.0.0.1:8000:8000"
     command: |
-      -jar /home/dynamodblocal/DynamoDBLocal.jar -dbPath /data/ -sharedDb -cors '*'
+     -D"java.library.path=/home/dynamodblocal/DynamoDBLocal_lib"  -jar /home/dynamodblocal/DynamoDBLocal.jar -dbPath /data/ -sharedDb -cors '*'
     networks:
       backend:
         aliases:

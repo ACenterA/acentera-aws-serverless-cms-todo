@@ -17,7 +17,7 @@ import (
 	// "crypto/sha1"
 	// "encoding/base64"
 
-	// "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"github.com/aws/aws-lambda-go/events"
 	jwt "github.com/dgrijalva/jwt-go"
 
@@ -70,7 +70,7 @@ type AppModelPayloadReq struct {
 	Payload      string  `json:"Payload"`
 }
 
-func ExecuteFast(lib acenteralib.SharedLib, c *gin.Context, reqObj acenteralib.RequestObject) (events.APIGatewayProxyResponse, error) {
+func ExecuteFast(sharedlib acenteralib.SharedLib, c *gin.Context, jwtSession jwt.Claims, reqObj acenteralib.RequestObject) (events.APIGatewayProxyResponse, error) {
 		        fmt.Println("GOT REQOBJ LIB OF ", reqObj)
 		        fmt.Println("GOT CONTEXT OF ")
 		        // fmt.Println(c)
@@ -97,7 +97,7 @@ func ExecuteFast(lib acenteralib.SharedLib, c *gin.Context, reqObj acenteralib.R
 	fmt.Println("Returning response...")
 	//return acenteralib.RestResponseNoCache(r.Handle(data, reqObj))
 
-	genHandlerObject := &models.GenericHandler{Awslambda: lib}
+	genHandlerObject := &models.GenericHandler{Awslambda: sharedlib}
 	genHandlerObject.Initialize(r)
 
 	f, er := r.Handle(data, reqObj)
@@ -105,6 +105,13 @@ func ExecuteFast(lib acenteralib.SharedLib, c *gin.Context, reqObj acenteralib.R
 	fmt.Println(f)
 	fmt.Println(er)
 	// respObj := &PluginSettings{}
+	b, err := json.MarshalIndent(r, "", "  ")
+        if err != nil {
+                return responseEmpty, errors.WithStack(err)
+        }
+	fmt.Println("RESPON ISE : " + string(b))
+
+	//fomt.Printlnreturn acenteralib.RestResponseNoCache(f)
 	return acenteralib.RestResponseNoCache(f)
 }
 

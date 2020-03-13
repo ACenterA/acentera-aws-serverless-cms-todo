@@ -35,7 +35,7 @@ module.exports = {
         : config.dev.assetsPublicPath
   },
   resolve: {
-    extensions: ['.js', '.vue', '.json'],
+    extensions: [".webpack.js", ".web.js", ".mjs", ".js", ".vue",".json"],
     alias: {
       'assets': resolve('assets'),
       'pages': resolve('src/pages'),

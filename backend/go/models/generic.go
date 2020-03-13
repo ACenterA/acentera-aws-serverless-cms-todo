@@ -621,8 +621,11 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 
 	// will add USERID / `type`#last-modified-date so we can query liike
 	// Get latest created `type` (ie: tasks) for a user...
+	fmt.Println("OK GOT SEESION OF")
 	fmt.Println(reqObj.Session)
+	fmt.Println("================")
 	mutation.Input["upk"] = reqObj.Session.Userid
+
 
 	// childSK := dynamoPutInput.Item["sk"].S
 	if hasChildMutation {
@@ -765,17 +768,23 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 		}
 	}
 
+	fmt.Println("ZZZ 3")
 	output, err := acenteralib.DynamoDB.UpdateItem(dynamoDdbUpdateInput)
 	fmt.Println(output)
 	fmt.Println(err)
+	fmt.Println("ZZZ 3a")
 	if err != nil {
+		fmt.Println("ZZZ 3b")
 		fmt.Println(err)
 		if ae, ok := err.(awserr.RequestFailure); ok && ae.Code() == "ConditionalCheckFailedException" {
 			//fmt.Println("Update failed due to constraint...")
+			fmt.Println("ZZZ 3c")
 			return nil, errors.WithStack(err)
 		}
+		fmt.Println("ZZZ 3d")
 		return nil, errors.WithStack(err)
 	}
+	fmt.Println("ZZZ 3e")
 
 	// do not use put items..
 	var item map[string]interface{}
@@ -788,13 +797,18 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	if hasChildMutation {
 		if !isNextMutation {
 			// Ok create the child element without the parent fields
+			fmt.Println("ZZZ 3f")
 			return p.handleCreateGeneric(reqObj, identity, mutation, true, &childDynamoPutInput, &item)
 		} else {
 			// Ok we are the child, return the item
 			// TODO: Return the merged parent fields ???
+			fmt.Println("REturning of item:")
+			fmt.Println("ZZZ 3g")
 			return &item, err
 		}
 	} else {
+		fmt.Println("ZZZ 3j")
+		fmt.Println("1- REturning of item: ")
 		return &item, err
 	}
 

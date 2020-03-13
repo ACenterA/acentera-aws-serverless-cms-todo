@@ -71,10 +71,10 @@ func RegisterRoutes(r *gin.Engine) {
 	r.POST(fmt.Sprintf("/api/plugins/%s/setup/bootstrap", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.AppPluginSiteBootstrap))
 	r.GET(fmt.Sprintf("/api/plugins/%s/settings", gofaas.PLUGIN_NAME), Awslambda.PluginNotifyAPIGateway(gofaas.GetSettings))
 
-	r.GET("/api/internal/test", Awslambda.PluginNotifyAPIGateway(gofaas.ExecuteFast))
-	r.POST("/api/internal/test", Awslambda.PluginNotifyAPIGateway(gofaas.ExecuteFast))
-	r.GET("/test", Awslambda.PluginNotifyAPIGateway(gofaas.ExecuteFast))
-	r.POST("/test", Awslambda.PluginNotifyAPIGateway(gofaas.ExecuteFast))
+	r.GET("/api/internal/test", Awslambda.PluginNotifyAPIGatewayJWTSecured(gofaas.ExecuteFast))
+	r.POST("/api/internal/test", Awslambda.PluginNotifyAPIGatewayJWTSecured(gofaas.ExecuteFast))
+	r.GET("/test", Awslambda.PluginNotifyAPIGatewayJWTSecured(gofaas.ExecuteFast))
+	r.POST("/test", Awslambda.PluginNotifyAPIGatewayJWTSecured(gofaas.ExecuteFast))
 
 	// Add any others
 	// authenticated ones are, examle
@@ -115,6 +115,7 @@ func main() {
 			lambda.Start(Awslambda.NotifyAPIGateway(WebsitePublic))
 		} else if os.Getenv("TYPE") == "MODELSWS" {
 			lambda.Start(Awslambda.NotifyAppSyncJWTSecure(ExecuteFast))
+			//lambda.Start(Awslambda.NotifyAPIGateway(WebsitePublic))
 		} else if os.Getenv("TYPE") == "MODELS" {
 			lambda.Start(Awslambda.NotifyAppSyncJWTSecure(Execute))
 		} else {
@@ -133,5 +134,10 @@ func ExecuteFast(sharedlib acenteralib.SharedLib, ctx context.Context, reqObj ac
 }
 
 func Execute(sharedlib acenteralib.SharedLib, ctx context.Context, reqObj acenteralib.RequestObject, e resolvers.Invocation) (interface{}, error) {
+	fmt.Println("GOT REQUEST HERE OF\n")
+	fmt.Println(ctx)
+	fmt.Println(reqObj)
+	fmt.Println(e)
+	fmt.Println("======\n")
 	return r.Handle(e, reqObj)
 }

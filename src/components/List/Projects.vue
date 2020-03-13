@@ -75,7 +75,7 @@ import waves from '@/directive/waves' // Waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
-import { ALL_PROJECTS } from '@/gql/queries/projects.gql'
+import { listProjects, updateProject, CreateProjectMutation, ALL_PROJECTS } from '@/gql/queries/projects.gql'
 
 export default {
   name: 'ListProjects',
@@ -209,27 +209,26 @@ export default {
       row.status = status
     },
     */
-    /*
-    async updateTask(project) {
+    async updateProject(project) {
       const result = await new Promise((resolve, reject) => {
         this.$apollo.mutate({
-          mutation: updateTask,
+          mutation: updateProject,
           variables: {
             id: project.id,
             title: project.title,
             status: project.status
           },
-          update: (store, { data: { updateTask }}) => {
+          update: (store, { data: { updateProject }}) => {
             // Update graph db store ?
-            const data = store.readQuery({ query: listTasks })
-            const index = data.listTasks.items.findIndex(item => item.id === updateTask.id)
-            data.listTasks.items[index] = updateTask
-            store.writeQuery({ query: listTasks, data })
+            const data = store.readQuery({ query: listProjects })
+            const index = data.listProjects.items.findIndex(item => item.id === updateProject.id)
+            data.listProjects.items[index] = updateProject
+            store.writeQuery({ query: listProjects, data })
           },
           optimisticResponse: {
             __typename: 'Mutation',
-            updateTask: {
-              __typename: 'Task',
+            updateProject: {
+              __typename: 'Project',
               ...project
             }
           }
@@ -243,7 +242,6 @@ export default {
       })
       return result
     },
-    */
     /*
     async deleteTask(task) {
       const result = await new Promise((resolve, reject) => {
@@ -309,7 +307,6 @@ export default {
         this.$refs['dataForm'].clearValidate()
       })
     },
-    /*
     createData() {
       // const dat = this.$data.postForm
       const project = this.project
@@ -323,12 +320,12 @@ export default {
           this.temp.id = parseInt(Math.random() * 100) + 1024 // mock a id
           this.temp.author = 'vue-element-admin'
           const title = this.temp.title
-          // const optimisticId = '' + Math.round(Math.random() * -1000000)
+          const optimisticId = '' + Math.round(Math.random() * -1000000)
           var status = 'active'
           var completed = false
           this.loading = true
           apollo.mutate({
-            mutation: CreateTaskMutation,
+            mutation: CreateProjectMutation,
             variables: {
               title,
               project,
@@ -336,23 +333,22 @@ export default {
               completed
             },
             // see https://github.com/Akryum/vue-apollo-todos
-            update: (store, { data: { createTask }}) => {
-
+            update: (store, { data: { createProject }}) => {
               // Add to ALL PROJECT list
               var queryKey = ALL_PROJECTS
-              var itemKey = 'listTask'
+              var itemKey = 'listProject'
 
               // Ensure no duplicas (offline graphql ...) if not using optimisticId logic
               // filtering doesnt seems to work with nested elements ???
               const queryWithFilteringOptimistic = {
                 query: queryKey,
                 // variables: { filter: { items: { id: optimisticId } } }
-                variables: { filter: { items: { id: '' + createTask.id }}}
+                variables: { filter: { items: { id: '' + createProject.id }}}
               }
 
-              console.error('received data filtering of ' + optimisticId + ' and of ' + createTask.id)
+              console.error('received data filtering of ' + optimisticId + ' and of ' + createProject.id)
               try {
-                if (createTask.id !== optimisticId) {
+                if (createProject.id !== optimisticId) {
                   const filteredData = store.readQuery(queryWithFilteringOptimistic)
                   if (filteredData) {
                     const tmpAddItem = filteredData[itemKey].items || filteredData[itemKey]
@@ -363,7 +359,7 @@ export default {
                       try {
                         for (var i = maxL - 1; !found && i > maxL - 4 && i > 0; i--) {
                           console.error(tmpAddItem[i])
-                          if (tmpAddItem[i].id === createTask.id) {
+                          if (tmpAddItem[i].id === createProject.id) {
                             found = true
                           }
                         }
@@ -372,7 +368,7 @@ export default {
                       }
 
                       if (!found) {
-                        tmpAddItem.push(createTask)
+                        tmpAddItem.push(createProject)
                       }
                       store.writeQuery({ ...queryWithFilteringOptimistic, data: filteredData })
                     }
@@ -381,16 +377,15 @@ export default {
               } catch (err) {
                 console.error(err)
               }
-
-            }
+            },
             optimisticResponse: {
-             createTask: {
+              createProject: {
                 title: title,
                 created: new Date(),
                 status: 'active',
                 id: optimisticId,
-                __typename: 'Project',
-             }
+                __typename: 'Project'
+              }
             }
           }).then(() => {
             this.$notify({
@@ -414,7 +409,6 @@ export default {
         }
       })
     },
-    */
     handleSelect(row) {
       console.error(row)
       this.$store.dispatch('setProject', row.id)
@@ -433,7 +427,7 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp)
           tempData.updated = new Date().toISOString().split('.')[0] + 'Z'
-          this.updateTask(tempData).then(() => {
+          this.updateProject(tempData).then(() => {
             for (const v of this.list) {
               if (v.id === this.temp.id) {
                 const index = this.list.indexOf(v)
