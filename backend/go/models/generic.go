@@ -42,6 +42,10 @@ var (
 	CustomModels = make(map[string]Models, 0)
 )
 
+type ErrModel struct {
+	ErrorMessage string `json:"errorMessage"`
+}
+
 type Models struct {
 	Version               int64                  `yaml:"version"`
 	Admin                 int64                  `yaml:"admin"`
@@ -636,7 +640,15 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 				origSK = origSK + "#" + v.(string)
 			} else {
 				// error
-				return nil, errors.New(fmt.Sprintf("Field '%s' missing", childSKSuffixField))
+				theErrMsg := fmt.Sprintf("Field '%s' missing", childSKSuffixField)
+				/*if (os.Getenv("IS_LOCAL") == "true") {
+				        var item map[string]interface{}
+					item["errorMessage"] = theErrMsg
+					return &item, errors.New(theErrMsg)
+				} else {
+					return nil, errors.New(theErrMsg)
+				}*/
+				return nil, errors.New(theErrMsg)
 			}
 		}
 		if !isNextMutation {

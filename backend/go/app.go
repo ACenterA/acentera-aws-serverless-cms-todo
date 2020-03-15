@@ -70,6 +70,10 @@ type AppModelPayloadReq struct {
 	Payload      string  `json:"Payload"`
 }
 
+type ErrMsg struct {
+	ErrorMessage	string `json:"errorMessage"`
+}
+
 func ExecuteFast(sharedlib acenteralib.SharedLib, c *gin.Context, jwtSession jwt.Claims, reqObj acenteralib.RequestObject) (events.APIGatewayProxyResponse, error) {
 		        fmt.Println("GOT REQOBJ LIB OF ", reqObj)
 		        fmt.Println("GOT CONTEXT OF ")
@@ -104,12 +108,27 @@ func ExecuteFast(sharedlib acenteralib.SharedLib, c *gin.Context, jwtSession jwt
 	fmt.Println("AAA")
 	fmt.Println(f)
 	fmt.Println(er)
+	if (er != nil) {
+	    fmt.Println("GOT ERR OF :", er.Error())
+	    errMsg := ErrMsg{
+		    ErrorMessage: er.Error(),
+	    }
+	    return acenteralib.RestResponseNoCache(errMsg)
+	    /*
+	    b, err := json.MarshalIndent(errMsg, "", "  ")
+	    if err != nil {
+	          return responseEmpty, errors.WithStack(er)
+	    }
+	    fmt.Println("RESPON ISE : " + string(b))
+	    return responseEmpty, errors.New(string(b))
+	    */
+	}
 	// respObj := &PluginSettings{}
-	b, err := json.MarshalIndent(r, "", "  ")
+	b, err := json.MarshalIndent(f, "", "  ")
         if err != nil {
-                return responseEmpty, errors.WithStack(err)
+                return responseEmpty, errors.WithStack(er)
         }
-	fmt.Println("RESPON ISE : " + string(b))
+	fmt.Println("azz RESPON ISE : " + string(b))
 
 	//fomt.Printlnreturn acenteralib.RestResponseNoCache(f)
 	return acenteralib.RestResponseNoCache(f)

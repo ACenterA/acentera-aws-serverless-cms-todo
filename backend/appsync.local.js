@@ -376,7 +376,7 @@ serverless-cms-graphql_1  | undefined
 		// new Lambda({ region: 'us-east-1', endpoint: 'http://docker.for.mac.localhost:3001' })
 		    //
 		    console.error('req is')
-		    console.error(JSON.stringify(context.request.headers['x-token']))
+		    //console.error(JSON.stringify(context.request.headers['x-token']))
                 const lambdaResult = await axios.post(lambdaEndpoint, params, {
                     headers: {
                         Accept: "application/json",
@@ -387,16 +387,24 @@ serverless-cms-graphql_1  | undefined
                         "X-Plugin": process.env.PLUGIN_NAME
                     }
                 });
-		console.error('received of ')
-		console.error('sending of')
-		console.error(JSON.stringify(process.env))
-		// console.error(lambdaResult)
-		console.error(lambdaResult.Payload)
+		//console.error('received of ')
+		//console.error('111a - sending of')
+		//console.error(JSON.stringify(process.env))
+		//console.error('222a - sending of')
+		//console.error(lambdaResult)
+		//console.error('333a - sending of')
+		//console.error(lambdaResult.Payload)
                 var rr  = null
 		if ( lambdaResult.Payload ) {
 		  rr = JSON.parse(lambdaResult.Payload);
 	  	} else {
 		  rr = lambdaResult.data
+		}
+	        try {
+			console.error('resp : recieved of')
+			console.error(rr)
+		} catch (ze) {
+			//console.error(ze);
 		}
                 const data = rr
                 console.error(data);
