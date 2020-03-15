@@ -44,7 +44,7 @@ services:
           - dynamodb-admin
 
   core:
-    image: acentera/prod:acentera-aws-core-0.0.2
+    image: acentera/prod:acentera-aws-core-0.0.4
     volumes:
       - /dev/shm:/dev/shm
       - ./go/:/lambda/
@@ -96,6 +96,7 @@ services:
        SOCKHOST: http://cms.dev.acentera
        #cms.dev.acentera
        #SOCKPORT: 443
+       HTTPS: "true"
        HTTPS: "true"
        PUBLIC: http://cms.dev.acentera
        DEV_ACCOUNTID: ${DEV_ACCOUNTID}
