@@ -69,6 +69,22 @@ Using Docker Compose only
 | GraphQL    | https://graphql.dev.acentera/ | Apollo GraphQL Server |
 | API Gateway Proxy | https://apiproxy.dev.acentera/ | API Gateway Proxy (acentera core or plugin routing) |
 
+# Create a new User
+
+Using the dynamodb endpoint, you can fetch an existing user by doing a scan where SK=USER
+
+Copy the JSON Object.
+
+Modify the title / email address to your new username
+
+Write as id : Calculate the md5 of the email address
+
+Write as password : {CLEAR}thePasswordInPlainText
+
+Update the Roles to be something like : [ "Editor" ]
+
+
+
 # Launching using AWS Serverless Repo
 
 Once you have deployed the serverless repo through the Serverless Repository, you should have a Cloudfront distributin created.
