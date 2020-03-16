@@ -5,13 +5,23 @@ import App from './App'
 import FormWizard from 'vue-form-wizard'
 import 'vue-form-wizard/dist/vue-form-wizard.min.css'
 
+import vueNcform from '@ncform/ncform'
+import Element from 'element-ui'
+import 'element-ui/lib/theme-chalk/index.css'
+import ncformStdComps from '@ncform/ncform-theme-elementui'
+
 // import Home from './pages/Home'
 import store from '@/store'
 
 import 'assets/css/app.styl'
-Vue.use(FormWizard)
 
+window.VueObj = window.VueObj || Vue
+
+VueObj.use(FormWizard)
+VueObj.use(Element)
+VueObj.use(vueNcform, { extComponents: ncformStdComps, lang: 'fr-ca' })
 // sort on values
+
 /* eslint-disable */
 window.sortArr = function(desc) {
   return function(a, b) {

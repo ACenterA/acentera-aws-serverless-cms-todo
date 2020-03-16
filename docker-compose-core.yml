@@ -88,7 +88,7 @@ services:
           - core
 
   core-vue:
-    image: acentera/prod:acentera-aws-core-vuejs-0.0.4
+    image: acentera/prod:acentera-aws-core-vuejs-0.0.5
     environment:
        HOST: 0.0.0.0
        PORT: 80

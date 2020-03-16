@@ -351,6 +351,38 @@ export const routerValid = [
         ]
       }
     ]
+  },
+  {
+    path: '/builder',
+    // component: Layout,
+    layout: 'Layout',
+    redirect: '/builder/v1',
+    alwaysShow: true, // will always show the root menu
+    meta: {
+      title: 'BUilder',
+      icon: 'lock',
+      roles: ['admin', 'editor'] // you can set roles in root nav
+    },
+    children: [
+      {
+        path: 'v1',
+        component: () => import('@/views/builder/Index'),
+        name: 'BuildIndex',
+        meta: {
+          title: 'Builder',
+          roles: ['admin', 'editor'] // or you can only set roles in sub nav
+        }
+      },
+      {
+        path: 'v2',
+        component: () => import('@/views/builderv2/Index'),
+        name: 'BuildIndexV2',
+        meta: {
+          title: 'BuilderV2',
+          roles: ['admin', 'editor'] // or you can only set roles in sub nav
+        }
+      }
+    ]
   }
   /*
   {

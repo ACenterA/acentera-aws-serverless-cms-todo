@@ -8,9 +8,13 @@ const app = {
   state: {
     projectid: null,
     project: {},
-    projects: null
+    projects: null,
+    fields: []
   },
   mutations: {
+    updateFields: (state, payload) => {
+      state.fields = payload.fields
+    },
     SET_PROJECTS: (state, val) => {
       state.projects = val
     },
@@ -152,6 +156,8 @@ const app = {
         // TODO: Add some security such as signed url / random token in the web UI ?
         performAppInitialization(data).then(response => {
           // This returns the list of plugins
+          // alert('vue is')
+          // alert(window.VueObj)
           if (response && response.data) {
             // commit('SET_ACCOUNT_ID', null)
             commit('SET_LOADING', false)
