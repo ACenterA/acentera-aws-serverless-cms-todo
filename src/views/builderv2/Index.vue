@@ -3,109 +3,11 @@
     <AppHeader/>
 
     <div class="content-container build-container build-body">
-      <div v-if="showAddForm" class="add-form" @click="addFormElements()">
-        <div class="add-form-text">
-          Add Form Element
-        </div>
-        <div class="circle-normal"><span class="glyphicon glyphicon-plus"/></div>
-
-        <div class="circle-ripple circle-ripple-1"/>
-        <div class="circle-ripple circle-ripple-2"/>
-      </div>
-
-      <div :class="{ 'form-elements-show': showAddForm === false }" class="form-elements">
-        <div class="element-main-header">Form Elements
-          <span class="glyphicon glyphicon-remove pull-right form-elements-remove" @click="removeFormElements()"/>
-        </div>
-
-        <div id="header" class="element-container">
-          <div class="element-icon">
-            <span class="glyphicon glyphicon-header"/>
-          </div>
-          <div class="element-text">
-            Header
-          </div>
-        </div>
-        <div id="name" class="element-container">
-          <div class="element-icon">
-            <span class="glyphicon glyphicon-user"/>
-          </div>
-          <div class="element-text">
-            Full Name
-          </div>
-        </div>
-        <div id="email" class="element-container">
-          <div class="element-icon">
-            <span class="glyphicon glyphicon-envelope"/>
-          </div>
-          <div class="element-text">
-            Email
-          </div>
-        </div>
-        <div id="address" class="element-container">
-          <div class="element-icon">
-            <span class="glyphicon glyphicon-map-marker"/>
-          </div>
-          <div class="element-text">
-            Address
-          </div>
-        </div>
-        <div id="input" class="element-container">
-          <div class="element-text">
-            Input
-          </div>
-        </div>
-        <div id="textarea" class="element-container">
-          <div class="element-text">
-            Textarea
-          </div>
-        </div>
-        <div id="checkboxes" class="element-container">
-          <div class="element-text">
-            Checkboxes
-          </div>
-        </div>
-        <div id="radio_buttons" class="element-container">
-          <div class="element-text">
-            Radio Buttons
-          </div>
-        </div>
-        <div id="select" class="element-container">
-          <div class="element-text">
-            Select
-          </div>
-        </div>
-      </div>
-
       <div class="sortable-container">
-
         <ncform v-model="formSchema.value" :form-schema="formSchema" form-name="your-form-name" @submit="submit()"/>
-
-        <div :class="{ 'sortable-border': fields.length === 0 }" class="sortable">
-          <div v-for="(field, index) in fields" :id="'list-' + index" :key="field.id" :class="{ 'focused-element': field.isFocused === true }" tabindex="-1" class="form-group form-element-container" @click="elementFocus(index)">
-            <div :class="{ hide: field.isFocused === false }" class="action-circles">
-
-              <div class="action-circle properties-circle" @click="editElementProperties(index)">
-                <span class="glyphicon glyphicon-cog properties-cog"/> <span class="properties-text">Properties</span>
-              </div>
-              <div class="action-circle delete-circle" @click="deleteElement(index)">
-                <span class="glyphicon glyphicon-trash delete-trash"/> <span class="delete-text">Remove</span>
-              </div>
-            </div>
-
-            <LLElement
-              v-if="field.type === 'name'"
-              :field="field"
-            />
-
-            <div v-if="field.visibility === 'hidden'" class="element-not-visible">
-              <span class="glyphicon glyphicon-exclamation-sign"/> This field is hidden and will not be seen on the form.
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div :class="{ 'element-properties-show': showElementProperties === true }" class="element-properties">
+      <div :class="{ 'element-properties-show': showElementProperties === true, 'element-properties-hide': showElementProperties === false }" class="element-properties">
         <div class="element-main-header">
           <span v-if="type === 'header'">Header</span>
           <span v-if="type === 'name'">Full Name</span>
@@ -312,6 +214,11 @@ export default {
         type: 'object',
         properties: {
           name: {
+            label: 'bbbb',
+            type: 'string'
+          },
+          patate: {
+            label: 'aaaa',
             type: 'string'
           }
         }

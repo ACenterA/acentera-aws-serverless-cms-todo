@@ -15,8 +15,7 @@ import store from '@/store'
 
 import 'assets/css/app.styl'
 
-window.VueObj = window.VueObj || Vue
-
+var VueObj = window.VueObj || Vue
 VueObj.use(FormWizard)
 VueObj.use(Element)
 VueObj.use(vueNcform, { extComponents: ncformStdComps, lang: 'fr-ca' })

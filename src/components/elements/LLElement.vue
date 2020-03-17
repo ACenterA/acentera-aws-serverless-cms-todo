@@ -1,5 +1,6 @@
 <template>
   <div>
+    aaasfsfd
     <label class="editable editable-label" contenteditable="true">{{ field.label }}</label>
     <div class="row">
       <div v-for="subfield in activeSubFields(field.subfields)" :key="subfield" class="col-xs-6">
