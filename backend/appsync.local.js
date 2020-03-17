@@ -132,8 +132,11 @@ const CF_SCHEMA = yaml.Schema.create([
 
 //Read GraphQL schema
 var typeDefs = fs.readFileSync("schema.graphql", "utf8");
-typeDefs = 'scalar AWSDateTime\n' + typeDefs;
+var customType = 'scalar AWSDateTime\n'
+typeDefs = customType + typeDefs;
 const schemaAST = parse(typeDefs);
+
+const sampleConstDef = parse(customType)
 
 //Fill in subscriptions from the Schema
 let subscriptions = {
@@ -375,7 +378,7 @@ serverless-cms-graphql_1  | undefined
 
 		// new Lambda({ region: 'us-east-1', endpoint: 'http://docker.for.mac.localhost:3001' })
 		    //
-		    console.error('req is')
+		    // console.error('req is')
 		    //console.error(JSON.stringify(context.request.headers['x-token']))
                 const lambdaResult = await axios.post(lambdaEndpoint, params, {
                     headers: {
@@ -386,14 +389,17 @@ serverless-cms-graphql_1  | undefined
                         "X-Site": process.env.PLUGIN_KEY,
                         "X-Plugin": process.env.PLUGIN_NAME
                     }
-                });
+                }).catch(err => {
+			console.error(err.code);
+			console.error(err.message);
+		});
 		//console.error('received of ')
 		//console.error('111a - sending of')
 		//console.error(JSON.stringify(process.env))
-		//console.error('222a - sending of')
+		console.error('222a - sending of')
 		//console.error(lambdaResult)
-		//console.error('333a - sending of')
-		//console.error(lambdaResult.Payload)
+		console.error('333a - sending of')
+		console.error(lambdaResult.Payload)
                 var rr  = null
 		if ( lambdaResult.Payload ) {
 		  rr = JSON.parse(lambdaResult.Payload);
@@ -402,7 +408,7 @@ serverless-cms-graphql_1  | undefined
 		}
 	        try {
 			console.error('resp : recieved of')
-			console.error(rr)
+			// console.error(rr)
 		} catch (ze) {
 			//console.error(ze);
 		}
@@ -531,23 +537,56 @@ DDtypeName][fieldName] = async (root, args, context) => {
                     `Resolver`,
 */
 //creating and starting Apollo-server
-const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: async ({ req, connection }) => {
-        if (connection) {
-            return {};
-        } else {
-            return {
-                request: { headers: req.headers },
-                identity: { sourceIp: "127.0.0.1" }
-            };
-        }
-    },
-    tracing: true
-});
+const express = require('express')
+const app = express()
+var errorMsg = '';
+app.post('/', function (req, res) {
+  var rr = {
+	  status: 'ErrorParsing GraphQL Schema',
+	  errorMessage: errorMsg
+  };
+  res.send(JSON.stringify(rr));
+})
+app.get('/', function (req, res) {
+  var rr = {
+	  status: 'ErrorParsing GraphQL Schema',
+	  errorMessage: errorMsg
+  };
+  res.send(JSON.stringify(rr));
+})
 
-server.listen().then(({ url, subscriptionsUrl }) => {
-    console.log(chalk.bold(`Local AppSync ready at ${url}`));
-    console.log(chalk.bold(`The subscriptions url is ${subscriptionsUrl}\n`));
-});
+var isError = false;
+var server = app;
+try {
+	server = new ApolloServer({
+	    typeDefs,
+	    resolvers,
+	    context: async ({ req, connection }) => {
+	        if (connection) {
+	            return {};
+	        } else {
+	            return {
+	                request: { headers: req.headers },
+	                identity: { sourceIp: "127.0.0.1" }
+	            };
+	        }
+	    },
+	    tracing: true
+	});
+	isError = false;
+} catch (exxx) {
+	isError = true;
+	console.error(exxx);
+	errorMsg = '' + exxx;
+}
+
+if (isError) {
+	server.listen(4000, function() {
+	    console.log(chalk.bold(`Local AppSync error listening to 0.0.0.0:4000`));
+	});
+} else {
+	server.listen().then(({ url, subscriptionsUrl }) => {
+	    console.log(chalk.bold(`Local AppSync ready at ${url}`));
+	    console.log(chalk.bold(`The subscriptions url is ${subscriptionsUrl}\n`));
+	});
+}

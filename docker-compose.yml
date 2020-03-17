@@ -38,13 +38,21 @@ services:
     env_file:                                                                                     
        - .env            
     volumes:
-      - ./backend/appsync.local.js:/usr/app/appsync.local.js
-      - ./backend/go/schema.graphql:/usr/app/schema.graphql
-      - ./backend/go/template.yml:/usr/app/template.yml
+      # vi cause issues..
+      #- ./backend/appsync.local.js:/usr/app/backend/appsync.local.js
+      - ./backend/:/usr/app/backend/
+      - ./backend/go/schema.graphql:/usr/app/backend/schema.graphql
+      - ./backend/go/template.yml:/usr/app/backend/template.yml
+      - ./src/gql/:/usr/app/gql
     environment:
        LOCAL_LAMBDA_HOST: serverless-cms
        LOCAL_LAMBDA_PORT: 3000
        PLUGINNAME: ${PLUGIN_NAME}                                                                  
+       DEBUG: "true"
+       WORKDIR: "/usr/app/"
+       USER: "acentera"
+       UID: 
+       GID:
        PLUGIN_NAME: ${PLUGIN_NAME}                                                  
        PluginName: ${PLUGIN_NAME}                                          
        SITE_KEY: ${PLUGIN_KEY}                                                                    
@@ -67,14 +75,16 @@ services:
 
   serverless-cms:                                                                                 
     build:                                                                                        
-       context: backend/go/.                                                                      
+       context: .
+       dockerfile: backend/go/Dockerfile
     volumes:                                                                                      
-      - ./backend/go/:/go/src/github.com/myplugin/gofaas                                          
-      - ./README.md:/go/src/github.com/myplugin/gofaas/README.md:ro                               
-      - ./LICENSE:/go/src/github.com/myplugin/gofaas/LICENSE:ro                                   
-      - ./go/shared:${PWD}/backend/go/shared                                                      
-      - ./backend/go/customvendors/static:/go/src/github.com/acenterastatic/static                
-      - /var/run/docker.sock:/var/run/docker.sock:rw                                              
+      - ./backend/go/:/go/src/github.com/myplugin/gofaas
+      - ./src/gql/schema:/go/src/github.com/myplugin/gofaas/schema
+      - ./README.md:/go/src/github.com/myplugin/gofaas/README.md:ro
+      - ./LICENSE:/go/src/github.com/myplugin/gofaas/LICENSE:ro
+      - ./go/shared:${PWD}/backend/go/shared
+      - ./backend/go/customvendors/static:/go/src/github.com/acenterastatic/static
+      - /var/run/docker.sock:/var/run/docker.sock:rw
     # network_mode: bridge                                                                        
     networks:                                                                                     
       traeffik:

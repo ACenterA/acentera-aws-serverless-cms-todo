@@ -88,3 +88,5 @@ backend/go/models.sam
 backend/go/graphql.sam
 backend/go/schema.graphql
 backend/go/handlers/app/.main
+backend/template.yml
+backend/go/schema/

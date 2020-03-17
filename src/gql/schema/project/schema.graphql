@@ -6,7 +6,7 @@ nativetype Project {
 }
 
 # TODO Add ProjectStatusType As enum
-type Project implements BaseObject {
+type Project implements BaseObject {  
 }
 
 

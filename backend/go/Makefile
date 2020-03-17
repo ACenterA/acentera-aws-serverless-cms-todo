@@ -27,8 +27,8 @@ deploy-static: web/static/index.html
 regen_graphql:
 	[ -e schema.graphql ] && rm -fr schema.graphql || true
 	gqlmerge ./schema schema.graphql
-	cp -f graphql.sam template.yml
-	cp -f models.sam handlers/app/conf.yaml
+	cp -f graphql.sam template.yml && chmod o+rw template.yml
+	cp -f models.sam handlers/app/conf.yaml && chmod o+rw handlers/app/conf.yaml
 	
 dev: regen_graphql
 	export GOOS=linux
@@ -36,11 +36,8 @@ dev: regen_graphql
 	#make -j dev-watch dev-sam dev-local
 
 dev-go:
+	echo "OK DEV-GO CALLED"
 	kill -9 "$$(cat /tmp/sam3.pid)" || true
-	while [ -z "$$(find /go/src/github.com/myplugin/gofaas/handlers/app/. -newer /go/src/github.com/myplugin/gofaas/handlers/app/.main)" ]; do \
-		echo "Waiting loop.."; \
-		/bin/sleep 5; \
-	done
 	env > /tmp/kkkkkkkl && echo "Launching Fast GO" && { SKIP_COGNITO=true SITE=${PLUGIN_KEY} AWS_SECRET_ACCESS_KEY=a AWS_ACCESS_KEY_ID=a AWS_SAM_LOCAL=true CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main & echo $$! > /tmp/sam3.pid; }
 
 dev-sam:
@@ -52,11 +49,19 @@ dev-sam:
 	#echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main & echo $$! > /tmp/sam3.pid; }
 	#echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main; }
 
+removeapp:
+	if [ -e /go/src/github.com/myplugin/gofaas/handlers/app/main ]; then
+	  rm -f /go/src/github.com/myplugin/gofaas/handlers/app/main; \
+	  touch /go/src/github.com/myplugin/gofaas/handlers/app/main.go; \
+	fi
+
 dev-watch:
-	go build -i
 	mkdir -p /opt; ln -snf /go/src/github.com/acenteracms/acenteralib/aws.so /opt/aws.so
 	watchexec -f '*.yml' -s SIGKILL -r 'make -j dev-sam' &
-	((sleep 5 && touch handlers/app/main.go &)); watchexec -f '*.go' -s SIGKILL -r 'make -j handlers dev-go'
+	go build -i
+	watchexec -f '*.go' -s SIGKILL -r 'make -j handlers; make -j dev-go' &
+	sleep 1; touch handlers/app/main.go
+	watchexec -w schema -e graphql -r 'make regen_graphql'
 
 HANDLERS=$(addsuffix main,$(wildcard handlers/*/))
 $(HANDLERS): handlers/%/main: *.go handlers/%/main.go
