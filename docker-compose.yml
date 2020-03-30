@@ -145,5 +145,5 @@ networks:
 
     traeffik:
        external:
-          name: acentera-backend
+          name: acentera_backend
 

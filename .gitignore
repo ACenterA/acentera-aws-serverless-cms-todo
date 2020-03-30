@@ -90,3 +90,5 @@ backend/go/schema.graphql
 backend/go/handlers/app/.main
 backend/template.yml
 backend/go/schema/
+node_modules/
+node_modules

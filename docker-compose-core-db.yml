@@ -1,0 +1,106 @@
+version: '3.7'
+services:
+  dynamodb:
+    image: acentera/prod:acentera-aws-dynamodb-0.0.1
+    volumes:
+     - dynamodb:/data/
+#    ports:
+#     - "127.0.0.1:8000:8000"
+    command: |
+      -jar /home/dynamodblocal/DynamoDBLocal.jar -dbPath /data/ -sharedDb -cors '*'
+    networks:
+      backend:
+        aliases:
+          - dynamodb
+
+  # Dynamodb Admin
+  dynamodb-admin:
+    image: acentera/prod:acentera-aws-dynamodb-admin-0.0.1
+    environment:
+      DYNAMO_ENDPOINT: "http://dynamodb:8000"
+      APP_DATA_TABLE_NAME: app-data
+      APP_DATA_PERM_TABLE_NAME: app-data-permissions
+      SESSION_TABLE_NAME: app-data-sessions
+      AWS_DEFAULT_REGION: local
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+#    ports:
+#      - "127.0.0.1:8001:8001"
+
+    labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_dynamodb.rule=Host(`dynamodb.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_dynamodb.entrypoints=http"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_dynamodb.rule=Host(`dynamodb.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_dynamodb.entrypoints=https"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_dynamodb.tls=true"
+     - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}_https_dynamodb.redirectscheme.scheme=https"
+     - "traefik.http.services.${COMPOSE_PROJECT_NAME}_https_dynamodb.loadbalancer.server.port=8001"
+
+    networks:
+      traeffik:
+      backend:
+        aliases:
+          - dynamodb-admin
+
+  proxy:
+    image: acentera/prod:acentera-aws-core-proxy-0.0.4
+    env_file:
+       - .env
+    networks:
+      traeffik:
+      backend:
+        aliases:
+          - proxy
+    environment:
+      CORE: 'core:3003'
+      # TODO: We should have an array of ... or something
+      PLUGIN_PORT: '3003'
+      PLUGIN_NAME: 'serverless-cms'
+#    ports:
+#      - "127.0.0.1:2000:2000"
+
+    labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_apiproxy.rule=Host(`apiproxy.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_apiproxy.entrypoints=http"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_apiproxy.rule=Host(`apiproxy.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_apiproxy.entrypoints=https"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_apiproxy.tls=true"
+     - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}_https_apiproxy.redirectscheme.scheme=https"
+     - "traefik.http.services.${COMPOSE_PROJECT_NAME}_https_apiproxy.loadbalancer.server.port=2000"
+
+  proxy-core:
+    image: acentera/prod:acentera-aws-core-proxy-0.0.4
+    env_file:
+       - .env
+    networks:
+      traeffik:
+      backend:
+        aliases:
+          - proxy-core
+    environment:
+      CORE: 'core-vue:80'
+      # TODO: We should have an array of ... or something
+      #PLUGIN_PORT: '3003'
+      #PLUGIN_NAME: 'serverless-cms'
+    labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_core-cms.rule=Host(`core-cms.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_core-cms.entrypoints=http"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_core-cms.rule=Host(`core-cms.dev.acentera`)"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_core-cms.entrypoints=https"
+     - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_core-cms.tls=true"
+     - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}_https_core-cms.redirectscheme.scheme=https"
+     - "traefik.http.services.${COMPOSE_PROJECT_NAME}_https_core-cms.loadbalancer.server.port=2001"
+
+networks:
+    backend:
+      name: ${COMPOSE_PROJECT_NAME}_backend
+
+    traeffik:
+       external:
+          name: acentera_backend
+
+volumes:
+   dynamodb:
