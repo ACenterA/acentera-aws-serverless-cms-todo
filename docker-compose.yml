@@ -3,8 +3,13 @@ services:
   serverless-cms-vue:
     build:
       context: .
+      args:
+        USER:
+        UID:
+        GID:
     volumes:
       - .:/usr/app/
+      - ..postcssrc.js:/usr/.postcssrc.js:ro
       - ./entrypoint.sh:/usr/local/bin/entrypoint.sh
       - ./backend/go/customvendors/static:/customvendors/static
     environment:
@@ -12,6 +17,9 @@ services:
        PORT: 80
        DEV_ACCOUNTID: ${DEV_ACCOUNTID}
        ENV_CONFIG: ${ENV_CONFIG}
+       USER:
+       UID: 
+       GID:
     networks:
       traeffik:
       backend:

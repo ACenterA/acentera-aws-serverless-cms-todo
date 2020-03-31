@@ -1,33 +1,41 @@
-FROM node:8-alpine
+ARG USER
+ARG UID
+ARG GID
 
-WORKDIR /var/app
+FROM acentera/prod:node-serverless-cms-base-v0.0.1
 
-COPY package.json .
-# RUN npm install --quiet
-# npm uninstall node-sass && npm install node-sass --sass-binary-name=linux-x64-57
+ARG USER
+ARG UID
+ARG GID
 
-RUN apk add --no-cache make gcc g++ python && \
-  npm install cross-env -g && \
-  npm install --save && \
-  apk del make gcc g++ python
-  
-# npm rebuild node-sass --force && \
-WORKDIR /usr/app
+RUN /usr/local/bin/userfix.sh && mkdir -p /usr/node_modules && \
+    chown -R "${USER}:" /usr/node_modules /root
 
-COPY favicon.ico favicon.ico
-COPY .eslintignore .eslintignore
-COPY .eslintrc.js .eslintrc.js
-COPY .babelrc .babelrc
-COPY index.html index.html
+COPY package*.json /usr/
 
-COPY build build
-COPY config config
-COPY static static
-COPY src src
+RUN chown ${USER}: /usr/ /usr/app
+RUN su -m -c "cd /usr/; npm ci --prefer-offline --no-audit" - "${USER}"
+RUN ls -altrh /usr/node_modules;
+
+# COPY favicon.ico favicon.ico
+# COPY .eslintignore .eslintignore
+# COPY .eslintrc.js .eslintrc.js
+# COPY .babelrc .babelrc
+# COPY .postcssrc.js .postcssrc.js
+# COPY index-template.html index.html
+# 
+# COPY build build
+# COPY config config
+# COPY static static
+# COPY src src
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-EXPOSE 9527
+ENV NODE_PATH=.:/usr/node_modules:/usr/local/node_modules
+WORKDIR /usr/app
 
-#ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+EXPOSE 9527
+EXPOSE 80
+
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 CMD ["npm","run", "dev"]

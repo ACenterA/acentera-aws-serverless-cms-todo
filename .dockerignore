@@ -1,8 +1,10 @@
 *
+!userfix.sh
 !/src
 !/config
 !/build
 !package.json
+!package-lock.json
 !/static
 !favicon.ico
 !index.html
