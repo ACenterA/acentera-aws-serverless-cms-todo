@@ -11,10 +11,11 @@ ARG GID
 RUN /usr/local/bin/userfix.sh && mkdir -p /usr/node_modules && \
     chown -R "${USER}:" /usr/node_modules /root
 
-COPY package*.json /usr/
+COPY package.json /usr/
+#COPY package-lock.json /usr/
 
 RUN chown ${USER}: /usr/ /usr/app
-RUN su -m -c "cd /usr/; npm ci --prefer-offline --no-audit" - "${USER}"
+RUN su -m -c "cd /usr/; npm i --prefer-offline --no-audit" - "${USER}"
 RUN ls -altrh /usr/node_modules;
 
 # COPY favicon.ico favicon.ico
