@@ -13,7 +13,7 @@ AWS.config.region = 'us-eastt-1'
 AWS.config.update({
    accessKeyId: 'AKID', secretAccessKey: 'SECRET',
    region: 'us-east-1',
-   endpoint: 'http://serverless-cms:3001',
+   endpoint: 'http://serverless-cms.:3001',
    sslEnabled: false
 });
 

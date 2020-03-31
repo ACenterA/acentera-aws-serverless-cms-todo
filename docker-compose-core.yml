@@ -22,7 +22,7 @@ services:
        APP_DATA_PERM_TABLE_NAME: "app-data-permissions"
        AWS_DEFAULT_REGION: "us-east-1"
        SKIP_SSM: "true"
-       LOGINSRV_DYNAMODB: "endpoint=http://dynamodb:8000,table=app-data"
+       LOGINSRV_DYNAMODB: "endpoint=http://dynamodb.docker.internal:8000,table=app-data"
        SKIP_COGNITO: "true"
        STACK_NAME: "local"
        AWS_SAM_LOCAL: "true"
@@ -43,6 +43,7 @@ services:
       backend:
         aliases:
           - core
+          - core.docker.internal
 
   core-vue:
     image: acentera/prod:acentera-aws-core-vuejs-0.0.5
@@ -68,6 +69,7 @@ services:
       backend:
         aliases:
           - core-vue
+          - core-vue.docker.internal
 
     labels:
      - "traefik.enable=true"
@@ -82,7 +84,8 @@ services:
 
 networks:
     backend:
-      name: ${COMPOSE_PROJECT_NAME}_backend
+        external:
+            name: acentera_backend
 
     traeffik:
        external:

@@ -12,12 +12,13 @@ services:
       backend:
         aliases:
           - dynamodb
+          - dynamodb.docker.internal
 
   # Dynamodb Admin
   dynamodb-admin:
-    image: acentera/prod:acentera-aws-dynamodb-admin-0.0.1
+    image: acentera/prod:acentera-aws-dynamodb-admin-0.0.2
     environment:
-      DYNAMO_ENDPOINT: "http://dynamodb:8000"
+      DYNAMO_ENDPOINT: "http://dynamodb.:8000"
       APP_DATA_TABLE_NAME: app-data
       APP_DATA_PERM_TABLE_NAME: app-data-permissions
       SESSION_TABLE_NAME: app-data-sessions
@@ -42,6 +43,7 @@ services:
       backend:
         aliases:
           - dynamodb-admin
+          - dynamodb-admin.docker.internal
 
   proxy:
     image: acentera/prod:acentera-aws-core-proxy-0.0.4
@@ -52,8 +54,9 @@ services:
       backend:
         aliases:
           - proxy
+          - proxy.docker.internal
     environment:
-      CORE: 'core:3003'
+      CORE: 'core.:3003'
       # TODO: We should have an array of ... or something
       PLUGIN_PORT: '3003'
       PLUGIN_NAME: 'serverless-cms'
@@ -79,8 +82,10 @@ services:
       backend:
         aliases:
           - proxy-core
+          - proxy-core.docker.internal
     environment:
-      CORE: 'core-vue:80'
+      CORE: 'core-main-vue.docker.internal:80'
+      COREAPI: 'core.docker.internal:3003'
       # TODO: We should have an array of ... or something
       #PLUGIN_PORT: '3003'
       #PLUGIN_NAME: 'serverless-cms'
@@ -96,7 +101,8 @@ services:
 
 networks:
     backend:
-      name: ${COMPOSE_PROJECT_NAME}_backend
+        external:
+            name: acentera_backend
 
     traeffik:
        external:
