@@ -15,6 +15,9 @@ function resolve(dir) {
 
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
+const SOCKPORT = process.env.SOCKPORT && Number(process.env.SOCKPORT)
+const SOCKHOST = process.env.SOCKHOST
+const PUBLIC = process.env.PUBLIC || undefined;
 
 const devWebpackConfig = merge(baseWebpackConfig, {
   mode: 'development',
@@ -36,6 +39,9 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     compress: true,
     host: HOST || config.dev.host,
     port: PORT || config.dev.port,
+    sockHost: SOCKHOST || config.dev.host,
+    sockPort: SOCKPORT || 'location',
+    public: PUBLIC,
     open: config.dev.autoOpenBrowser,
     overlay: config.dev.errorOverlay
       ? { warnings: false, errors: true }
