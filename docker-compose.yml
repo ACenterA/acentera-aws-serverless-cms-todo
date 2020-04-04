@@ -15,6 +15,10 @@ services:
     environment:
        HOST: 0.0.0.0
        PORT: 80
+       PUBLIC: https://cms.dev.acentera/
+       SOCKPORT: 443
+       SOCKHOST: https://cms-core.dev.acentera
+       PUBLIC: https://cms-core.dev.acentera
        DEV_ACCOUNTID: ${DEV_ACCOUNTID}
        ENV_CONFIG: ${ENV_CONFIG}
        USER:

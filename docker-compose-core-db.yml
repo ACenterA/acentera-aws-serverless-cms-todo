@@ -86,6 +86,7 @@ services:
           - proxy-core.docker.internal
     environment:
       CORE: 'core-main-vue.docker.internal:443'
+      COREVUE: 'core-main-vue.docker.internal:443'
       COREAPI: 'core.docker.internal:3003'
       # TODO: We should have an array of ... or something
       #PLUGIN_PORT: '3003'
