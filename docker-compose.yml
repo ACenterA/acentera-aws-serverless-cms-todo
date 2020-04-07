@@ -14,6 +14,10 @@ services:
     environment:
        HOST: 0.0.0.0
        PORT: 80
+       PUBLIC: http://plugin.dev.acentera/
+       # SOCKPORT: 'location'
+       SOCKHOST: plugin.dev.acentera
+       #PUBLIC: http://plugin.dev.acenteraa
        DEV_ACCOUNTID: ${DEV_ACCOUNTID}
        ENV_CONFIG: ${ENV_CONFIG}
        USER:
@@ -36,8 +40,8 @@ services:
      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_plugin.rule=Host(`plugin.dev.acentera`)"
      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_plugin.entrypoints=https"
      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}_https_plugin.tls=true"
-     - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}_https_plugin.redirectscheme.scheme=https"
-     - "traefik.http.services.${COMPOSE_PROJECT_NAME}_https_plugin.loadbalancer.server.port=81"
+       #- "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}_https_plugin.redirectscheme.scheme=http"
+     - "traefik.http.services.${COMPOSE_PROJECT_NAME}_https_plugin.loadbalancer.server.port=80"
 
   serverless-cms-graphql:
     build:
