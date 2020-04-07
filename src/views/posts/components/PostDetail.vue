@@ -4,11 +4,6 @@
 
       <sticky :class-name="'sub-navbar '+postForm.status">
         <StatusDropdown v-model="postForm.status" />
-        <!--
-          <CommentDropdown v-model="postForm.comment_disabled" />
-          <PlatformDropdown v-model="postForm.platforms" />
-          <SourceUrlDropdown v-model="postForm.source_uri" />
-        -->
         <el-button v-loading="loading" style="margin-left: 10px;" type="success" @click="submitForm">{{ $t('submit') }}
         </el-button>
         <!--
@@ -34,15 +29,15 @@
               <el-row>
                 <el-col :span="8">
                   <el-form-item :label="form_userinfo_label" class="postInfo-container-item">
-                    <el-select :placeholder="form_userinfo_placeholder" v-model="postForm.author" :remote-method="getRemoteUserList" filterable remote>
-                      <el-option v-for="(item,index) in userListOptions" :key="item+index" :label="item" :value="item"/>
+                    <el-select v-model="postForm.author" :placeholder="form_userinfo_placeholder" :remote-method="getRemoteUserList" filterable remote>
+                      <el-option v-for="(item,index) in userListOptions" :key="item+index" :label="item" :value="item" />
                     </el-select>
                   </el-form-item>
                 </el-col>
 
                 <el-col :span="10">
                   <el-form-item :label="form_display_time_label" class="postInfo-container-item">
-                    <el-date-picker :placeholder="form_display_time_placeholder" v-model="postForm.display_time" type="datetime" format="yyyy-MM-dd HH:mm:ss"/>
+                    <el-date-picker v-model="postForm.display_time" :placeholder="form_display_time_placeholder" type="datetime" format="yyyy-MM-dd HH:mm:ss" />
                   </el-form-item>
                 </el-col>
 
@@ -54,7 +49,8 @@
                       :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
                       :low-threshold="1"
                       :high-threshold="3"
-                      style="margin-top:8px;"/>
+                      style="margin-top:8px;"
+                    />
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -63,12 +59,12 @@
         </el-row>
 
         <el-form-item :label="form_desc_label" style="margin-bottom: 40px;">
-          <el-input :rows="1" :placeholder="form_desc_placeholder" v-model="postForm.content_short" type="textarea" class="article-textarea" autosize/>
+          <el-input v-model="postForm.content_short" :rows="1" :placeholder="form_desc_placeholder" type="textarea" class="article-textarea" autosize />
           <span v-show="contentShortLength" class="word-counter">{{ contentShortLength }}字</span>
         </el-form-item>
 
         <el-form-item prop="content" style="margin-bottom: 30px;">
-          <Tinymce ref="editor" :height="400" v-model="postForm.content" />
+          <Tinymce ref="editor" v-model="postForm.content" :height="400" />
         </el-form-item>
 
         <el-form-item :label="form_cover_image_label" prop="image_uri" style="margin-bottom: 30px;">
@@ -88,8 +84,8 @@ import Sticky from '@/components/Sticky' // 粘性header组件
 // import { validateURL } from '@/utils/validate'
 // import { fetchArticle } from '@/api/article'
 // import { userSearch } from '@/api/remoteSearch'
-import Warning from './Warning'
-import { CommentDropdown, PlatformDropdown, SourceUrlDropdown, StatusDropdown } from './Dropdown'
+// import Warning from './Warning'
+import { StatusDropdown } from './Dropdown'
 import { CreatePostMutation } from '@/gql/queries/posts.gql'
 
 const defaultForm = {
@@ -110,7 +106,7 @@ const defaultForm = {
 export default {
   name: 'ArticleDetail',
   components: {
-    Tinymce, MDinput, Upload, Sticky, Warning, CommentDropdown, PlatformDropdown, SourceUrlDropdown,
+    Tinymce, MDinput, Upload, Sticky,
     StatusDropdown
   },
   props: {

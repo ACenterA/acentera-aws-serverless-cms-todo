@@ -9,7 +9,6 @@ services:
         GID:
     volumes:
       - .:/usr/app/
-      - ..postcssrc.js:/usr/.postcssrc.js:ro
       - ./entrypoint.sh:/usr/local/bin/entrypoint.sh
       - ./backend/go/customvendors/static:/customvendors/static
     environment:

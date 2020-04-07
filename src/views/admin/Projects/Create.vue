@@ -27,7 +27,7 @@ import moment from 'moment'
 import { ALL_PROJECTS, CreateProjectMutation } from '@/gql/queries/projects.gql'
 import MDinput from '@/components/MDinput'
 
-export default{
+export default {
 
   components: {
     MDinput

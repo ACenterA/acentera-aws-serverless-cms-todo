@@ -6,7 +6,7 @@
     Welcome Administrator!
     <router-view v-if="isSettingRoute" :key="key" :loading="loading"/>
     -->
-    <router-view :loading="loading"/>
+    <router-view :loading="loading" />
   </div>
 </template>
 

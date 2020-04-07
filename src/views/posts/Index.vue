@@ -2,10 +2,10 @@
   <div v-if="!isLoading" class="minvh">
     <div v-if="!projectid">
       Select a Project
-      <list-projects :allow-create="false"/>
+      <list-projects :allow-create="false" />
     </div>
     <div v-else>
-      <list-posts v-if="projectid" :project="projectid"/>
+      <list-posts v-if="projectid" :project="projectid" />
     </div>
   </div>
 </template>

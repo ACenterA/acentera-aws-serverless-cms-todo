@@ -11,11 +11,11 @@
     <div v-if="hasProjects">
       <div v-if="!projectid">
         Select a Project.
-        <list-projects/>
+        <list-projects />
       </div>
       <div v-else>
         Current Project: {{ project.title }}
-        <list-tasks v-if="projectid" :project="projectid"/>
+        <list-tasks v-if="projectid" :project="projectid" />
       </div>
     </div>
   </div>

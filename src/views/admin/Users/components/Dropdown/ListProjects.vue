@@ -7,15 +7,16 @@
     </div>
 
     <el-table
-      v-loading="listLoading"
       :key="tableKey"
-      :default-sort = "{prop: 'created', order: 'descending'}"
+      v-loading="listLoading"
+      :default-sort="{prop: 'created', order: 'descending'}"
       :data="list"
       border
       fit
       highlight-current-row
       style="width: 100%;"
-      @sort-change="sortChange">
+      @sort-change="sortChange"
+    >
       <el-table-column :label="$t('table.date')" prop="created" sortable class="col-sm" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.created | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
@@ -33,7 +34,7 @@
       </el-table-column>
       <el-table-column :label="$t('table.role')" align="center" width="200" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <RoleDropdown v-model="scope.row.role" @input="onInput($event, scope)"/>
+          <RoleDropdown v-model="scope.row.role" @input="onInput($event, scope)" />
         </template>
       </el-table-column>
     </el-table>

@@ -1,26 +1,26 @@
 <template>
   <div>
-    <AppHeader/>
+    <AppHeader />
 
     <div class="content-container build-container build-body">
       <div v-if="showAddForm" class="add-form" @click="addFormElements()">
         <div class="add-form-text">
           Add Form Element
         </div>
-        <div class="circle-normal"><span class="glyphicon glyphicon-plus"/></div>
+        <div class="circle-normal"><span class="glyphicon glyphicon-plus" /></div>
 
-        <div class="circle-ripple circle-ripple-1"/>
-        <div class="circle-ripple circle-ripple-2"/>
+        <div class="circle-ripple circle-ripple-1" />
+        <div class="circle-ripple circle-ripple-2" />
       </div>
 
       <div :class="{ 'form-elements-show': showAddForm === false }" class="form-elements">
         <div class="element-main-header">Form Elements
-          <span class="glyphicon glyphicon-remove pull-right form-elements-remove" @click="removeFormElements()"/>
+          <span class="glyphicon glyphicon-remove pull-right form-elements-remove" @click="removeFormElements()" />
         </div>
 
         <div id="header" class="element-container">
           <div class="element-icon">
-            <span class="glyphicon glyphicon-header"/>
+            <span class="glyphicon glyphicon-header" />
           </div>
           <div class="element-text">
             Header
@@ -28,7 +28,7 @@
         </div>
         <div id="name" class="element-container">
           <div class="element-icon">
-            <span class="glyphicon glyphicon-user"/>
+            <span class="glyphicon glyphicon-user" />
           </div>
           <div class="element-text">
             Full Name
@@ -36,7 +36,7 @@
         </div>
         <div id="email" class="element-container">
           <div class="element-icon">
-            <span class="glyphicon glyphicon-envelope"/>
+            <span class="glyphicon glyphicon-envelope" />
           </div>
           <div class="element-text">
             Email
@@ -44,7 +44,7 @@
         </div>
         <div id="address" class="element-container">
           <div class="element-icon">
-            <span class="glyphicon glyphicon-map-marker"/>
+            <span class="glyphicon glyphicon-map-marker" />
           </div>
           <div class="element-text">
             Address
@@ -83,10 +83,10 @@
             <div :class="{ hide: field.isFocused === false }" class="action-circles">
 
               <div class="action-circle properties-circle" @click="editElementProperties(index)">
-                <span class="glyphicon glyphicon-cog properties-cog"/> <span class="properties-text">Properties</span>
+                <span class="glyphicon glyphicon-cog properties-cog" /> <span class="properties-text">Properties</span>
               </div>
               <div class="action-circle delete-circle" @click="deleteElement(index)">
-                <span class="glyphicon glyphicon-trash delete-trash"/> <span class="delete-text">Remove</span>
+                <span class="glyphicon glyphicon-trash delete-trash" /> <span class="delete-text">Remove</span>
               </div>
             </div>
 
@@ -141,7 +141,7 @@
             />
 
             <div v-if="field.visibility === 'hidden'" class="element-not-visible">
-              <span class="glyphicon glyphicon-exclamation-sign"/> This field is hidden and will not be seen on the form.
+              <span class="glyphicon glyphicon-exclamation-sign" /> This field is hidden and will not be seen on the form.
             </div>
           </div>
         </div>
@@ -152,7 +152,7 @@
           <span v-if="type === 'header'">Header</span>
           <span v-if="type === 'name'">Full Name</span>
           <span v-if="type === 'address'">Address</span> Properties
-          <span class="glyphicon glyphicon-remove pull-right form-elements-remove" @click="removeElementProperties()"/>
+          <span class="glyphicon glyphicon-remove pull-right form-elements-remove" @click="removeElementProperties()" />
         </div>
         <div v-if="type === 'header'" class="element-property">
           <div class="form-group">
@@ -217,7 +217,7 @@
         <div v-if="type === 'checkboxes' || type === 'radio_buttons' || type === 'select'" class="element-property">
           <div class="form-group">
             <label>Options</label>
-            <textarea v-model="options" class="form-control" rows="5" @keyup="editOptions()"/>
+            <textarea v-model="options" class="form-control" rows="5" @keyup="editOptions()" />
           </div>
         </div>
         <div class="element-property">

@@ -4,12 +4,14 @@
       <el-select
         v-model="value9"
         reserve-keyword
-        @change="onChange">
+        @change="onChange"
+      >
         <el-option
           v-for="item in list"
           :key="item.id"
           :label="item.title"
-          :value="item.id"/>
+          :value="item.id"
+        />
       </el-select>
     </span>
   </li>

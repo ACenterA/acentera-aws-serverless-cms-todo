@@ -1,10 +1,10 @@
 <template>
   <div>
-    <AppHeader/>
+    <AppHeader />
 
     <div class="content-container build-container build-body">
       <div class="sortable-container">
-        <ncform v-model="formSchema.value" :form-schema="formSchema" form-name="your-form-name" @submit="submit()"/>
+        <ncform v-model="formSchema.value" :form-schema="formSchema" form-name="your-form-name" @submit="submit()" />
       </div>
 
       <div :class="{ 'element-properties-show': showElementProperties === true, 'element-properties-hide': showElementProperties === false }" class="element-properties">
@@ -12,7 +12,7 @@
           <span v-if="type === 'header'">Header</span>
           <span v-if="type === 'name'">Full Name</span>
           <span v-if="type === 'address'">Address</span> Properties
-          <span class="glyphicon glyphicon-remove pull-right form-elements-remove" @click="removeElementProperties()"/>
+          <span class="glyphicon glyphicon-remove pull-right form-elements-remove" @click="removeElementProperties()" />
         </div>
         <div v-if="type === 'header'" class="element-property">
           <div class="form-group">
@@ -77,7 +77,7 @@
         <div v-if="type === 'checkboxes' || type === 'radio_buttons' || type === 'select'" class="element-property">
           <div class="form-group">
             <label>Options</label>
-            <textarea v-model="options" class="form-control" rows="5" @keyup="editOptions()"/>
+            <textarea v-model="options" class="form-control" rows="5" @keyup="editOptions()" />
           </div>
         </div>
         <div class="element-property">
@@ -174,18 +174,7 @@
 
 <script>
 import AppHeader from './AppHeader'
-import HeaderElement from '@/components/elements/HeaderElement'
-import NameElement from '@/components/elements/NameElement'
-import LLElement from '@/components/elements/LLElement'
-import EmailElement from '@/components/elements/EmailElement'
-import AddressElement from '@/components/elements/AddressElement'
-import InputElement from '@/components/elements/InputElement'
-import TextareaElement from '@/components/elements/TextareaElement'
-import CheckboxesElement from '@/components/elements/CheckboxesElement'
-import RadioButtonsElement from '@/components/elements/RadioButtonsElement'
-import SelectElement from '@/components/elements/SelectElement'
 
-import ncformStdComps from '@ncform/ncform-theme-elementui'
 import 'element-ui/lib/theme-chalk/index.css'
 
 import $ from 'jquery'
@@ -195,18 +184,7 @@ import { mapState } from 'vuex'
 
 export default {
   components: {
-    ncformStdComps,
-    AppHeader,
-    LLElement,
-    HeaderElement,
-    NameElement,
-    EmailElement,
-    AddressElement,
-    InputElement,
-    TextareaElement,
-    CheckboxesElement,
-    RadioButtonsElement,
-    SelectElement
+    AppHeader
   },
   data() {
     return {

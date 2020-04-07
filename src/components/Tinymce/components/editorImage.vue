@@ -12,7 +12,8 @@
         :before-upload="beforeUpload"
         class="editor-slide-upload"
         action="https://httpbin.org/post"
-        list-type="picture-card">
+        list-type="picture-card"
+      >
         <el-button size="small" type="primary">{{ $t('upload.browse') }}</el-button>
       </el-upload>
       <el-button @click="dialogVisible = false">{{ $t('upload.cancel') }}</el-button>

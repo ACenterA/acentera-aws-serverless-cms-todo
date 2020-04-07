@@ -2,7 +2,7 @@
   <div v-if="!isLoading" class="minvh">
     In Projects ...
 
-    <list-table/>
+    <list-table />
 
   </div>
 </template>
@@ -13,7 +13,7 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import ListTable from './Projects/ListTable'
 
-export default{
+export default {
 
   components: {
     ListTable

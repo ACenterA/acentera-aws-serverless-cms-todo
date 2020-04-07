@@ -17,14 +17,14 @@
             <a href="/"><h3 class="title">{{ $t('setupSite.initialize') }}</h3></a>
           </div>
           <el-input
-            :autosize="{ minRows: 2, maxRows: 4}"
             v-model="textInfo"
+            :autosize="{ minRows: 2, maxRows: 4}"
             placeholder="Please input"
             type="textarea"
             readonly
           />
 
-          <div class="margin-clear"/>
+          <div class="margin-clear" />
           <el-checkbox v-model="passwordForm.eula" class="title-small">{{ $t('setupSite.eula') }}</el-checkbox>
 
           <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleInitializeAccount">{{ $t('login.loginSubmit') }}</el-button>

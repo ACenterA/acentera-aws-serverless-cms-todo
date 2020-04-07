@@ -10,11 +10,14 @@ ARG GID
 
 RUN /usr/local/bin/userfix.sh && mkdir -p /usr/node_modules && \
     chown -R "${USER}:" /usr/node_modules /root
+RUN apk add git
+RUN npm i -g cross-env webpack-dev-server@3.7.1
+RUN npm i cross-env webpack-dev-server@3.7.1
 
 COPY packag*.json /usr/
 
 RUN chown ${USER}: /usr/ /usr/app
-RUN su -m -c "cd /usr/; npm ci --prefer-offline --no-audit" - "${USER}"
+RUN su -m -c "cd /usr/; npm i --prefer-offline --no-audit" - "${USER}"
 RUN ls -altrh /usr/node_modules;
 
 # COPY favicon.ico favicon.ico

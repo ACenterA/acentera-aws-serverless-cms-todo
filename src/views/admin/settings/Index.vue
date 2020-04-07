@@ -11,7 +11,7 @@ import permission from '@/directive/permission/index.js' // 权限判断指令
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 
-export default{
+export default {
 
   components: {
   },

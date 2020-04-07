@@ -4,7 +4,7 @@
     <div class="full-width center-content">
     </div>
     -->
-    <list-tasks v-if="projectid" :project="projectid"/>
+    <list-tasks v-if="projectid" :project="projectid" />
   </div>
 </template>
 <script>

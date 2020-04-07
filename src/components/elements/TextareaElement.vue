@@ -1,7 +1,7 @@
 <template>
   <div>
     <label class="editable" contenteditable="true">{{ field.label }}</label>
-    <textarea class="form-control"/>
+    <textarea class="form-control" />
   </div>
 </template>
 

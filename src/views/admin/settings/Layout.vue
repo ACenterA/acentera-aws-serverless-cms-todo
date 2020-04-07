@@ -2,7 +2,7 @@
 <template>
   <div v-if="!isLoading">
     In AdmidnSettings Layout
-    <router-view :key="key" :loading="loading"/>
+    <router-view :key="key" :loading="loading" />
   </div>
 </template>
 

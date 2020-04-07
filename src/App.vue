@@ -1,11 +1,11 @@
 <template>
   <div id="serverless-cmsapp">
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
 <script>
-export default{
+export default {
   name: 'SereverlessCmsApp'
 }
 </script>

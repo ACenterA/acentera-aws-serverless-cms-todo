@@ -4,11 +4,11 @@
     <el-row :gutter="8">
       <el-col :xs="{span: 24}" :sm="{span: 24}" :md="{span: 24}" :lg="{span: 12}" :xl="{span: 12}" style="padding-right:8px;margin-bottom:30px;">
         <h1>List of AMI Pipeline</h1>
-        <plugin-list-table @onRowSelect="onRowSelect"/>
+        <plugin-list-table @onRowSelect="onRowSelect" />
       </el-col>
       <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 12}" :xl="{span: 12}" style="margin-bottom:30px;">
         <h1>List of Clusters</h1>
-        <project-list-table @onRowSelect="onProjectRowSelect"/>
+        <project-list-table @onRowSelect="onProjectRowSelect" />
       </el-col>
       <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 12}" :xl="{span: 12}" style="margin-bottom:30px;">
         <br>
@@ -25,7 +25,7 @@ import PluginListTable from './components/PluginListTable'
 import ProjectListTable from './components/ProjectListTable'
 import { mapGetters } from 'vuex'
 
-export default{
+export default {
   name: 'DirectivePermission',
   components: {
     PluginListTable,

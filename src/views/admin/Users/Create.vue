@@ -1,6 +1,6 @@
 <template>
   <div v-if="!isLoading" class="minvh">
-    <user-detail :is-edit="true"/>
+    <user-detail :is-edit="true" />
   </div>
 </template>
 <script>

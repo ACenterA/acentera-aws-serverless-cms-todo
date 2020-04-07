@@ -1,7 +1,7 @@
 <!-- TOOD: We could totally override the app if needed? -->
 <template>
   <div v-if="!isLoading">
-    <router-view :loading="loading"/>
+    <router-view :loading="loading" />
   </div>
 </template>
 
