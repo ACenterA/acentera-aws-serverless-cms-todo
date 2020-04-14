@@ -17,9 +17,9 @@ import (
 	// "crypto/sha1"
 	// "encoding/base64"
 
-	"github.com/pkg/errors"
 	"github.com/aws/aws-lambda-go/events"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
 
 	// cfn "github.com/aws/aws-lambda-go/cfn"
 	// "github.com/aws/aws-lambda-go/lambdacontext"
@@ -66,33 +66,33 @@ Awslambda = filter
 }
 */
 type AppModelPayloadReq struct {
-	FunctionName string  `json:"FunctionName"` // Used to validate account id vs AWS::AccountID ...
-	Payload      string  `json:"Payload"`
+	FunctionName string `json:"FunctionName"` // Used to validate account id vs AWS::AccountID ...
+	Payload      string `json:"Payload"`
 }
 
 type ErrMsg struct {
-	ErrorMessage	string `json:"errorMessage"`
+	ErrorMessage string `json:"errorMessage"`
 }
 
 func ExecuteFast(sharedlib acenteralib.SharedLib, c *gin.Context, jwtSession jwt.Claims, reqObj acenteralib.RequestObject) (events.APIGatewayProxyResponse, error) {
-		        fmt.Println("GOT REQOBJ LIB OF ", reqObj)
-		        fmt.Println("GOT CONTEXT OF ")
-		        // fmt.Println(c)
-		        // fmt.Println("GOT EVENT PROXY REQUEST OF ")
-		        //fmt.Println(c)
-		        fmt.Println("aAA - AUTHORIZER OF ")
-		        fmt.Println(reqObj)
-		        fmt.Println("FF - DONE....")
+	fmt.Println("GOT REQOBJ LIB OF ", reqObj)
+	fmt.Println("GOT CONTEXT OF ")
+	// fmt.Println(c)
+	// fmt.Println("GOT EVENT PROXY REQUEST OF ")
+	//fmt.Println(c)
+	fmt.Println("aAA - AUTHORIZER OF ")
+	fmt.Println(reqObj)
+	fmt.Println("FF - DONE....")
 
 	var appPayloadReq AppModelPayloadReq
 	c.BindJSON(&appPayloadReq)
 
-//	x, _ := ioutil.ReadAll(c.Request.Body)
-  //      fmt.Printf("%s", string(x))
-        fmt.Println("GG - DONE....")
-        fmt.Printf("%s", string(appPayloadReq.Payload))
+	//	x, _ := ioutil.ReadAll(c.Request.Body)
+	//      fmt.Printf("%s", string(x))
+	fmt.Println("GG - DONE....")
+	fmt.Printf("%s", string(appPayloadReq.Payload))
 
-        data := resolvers.Invocation{}
+	data := resolvers.Invocation{}
 	json.Unmarshal([]byte(string(appPayloadReq.Payload)), &data)
 
 	fmt.Println(data)
@@ -108,26 +108,26 @@ func ExecuteFast(sharedlib acenteralib.SharedLib, c *gin.Context, jwtSession jwt
 	fmt.Println("AAA")
 	fmt.Println(f)
 	fmt.Println(er)
-	if (er != nil) {
-	    fmt.Println("GOT ERR OF :", er.Error())
-	    errMsg := ErrMsg{
-		    ErrorMessage: er.Error(),
-	    }
-	    return acenteralib.RestResponseNoCache(errMsg)
-	    /*
-	    b, err := json.MarshalIndent(errMsg, "", "  ")
-	    if err != nil {
-	          return responseEmpty, errors.WithStack(er)
-	    }
-	    fmt.Println("RESPON ISE : " + string(b))
-	    return responseEmpty, errors.New(string(b))
-	    */
+	if er != nil {
+		fmt.Println("GOT ERR OF :", er.Error())
+		errMsg := ErrMsg{
+			ErrorMessage: er.Error(),
+		}
+		return acenteralib.RestResponseNoCache(errMsg)
+		/*
+		   b, err := json.MarshalIndent(errMsg, "", "  ")
+		   if err != nil {
+		         return responseEmpty, errors.WithStack(er)
+		   }
+		   fmt.Println("RESPON ISE : " + string(b))
+		   return responseEmpty, errors.New(string(b))
+		*/
 	}
 	// respObj := &PluginSettings{}
 	b, err := json.MarshalIndent(f, "", "  ")
-        if err != nil {
-                return responseEmpty, errors.WithStack(er)
-        }
+	if err != nil {
+		return responseEmpty, errors.WithStack(er)
+	}
 	fmt.Println("azz RESPON ISE : " + string(b))
 
 	//fomt.Printlnreturn acenteralib.RestResponseNoCache(f)
@@ -172,6 +172,40 @@ func GetSettings(lib acenteralib.SharedLib, c *gin.Context, reqObj acenteralib.R
 	           Clusters: z,
 	   }
 	*/
+	fmt.Println("POST GET SETTINGS TES 1T a")
+	// ??stackName := os.Getenv("STACK_NAME")
+	fmt.Println("IS IT SAM", os.Getenv("AWS_SAM_LOCAL"))
+	siteKey := os.Getenv("SITE_KEY")
+	if siteKey == "" {
+		siteKey = c.GetHeader("x-site")
+	}
+	fmt.Println("SAMKY ", siteKey)
+
+	hasher := md5.New()
+	hasher.Write([]byte(fmt.Sprintf("%v", "admin")))
+	adminTableHash := hex.EncodeToString(hasher.Sum(nil))
+	fmt.Println("a - GET SETTINGS TEST")
+	nPluginInfo, errorPlugin := lib.GetSite(siteKey, adminTableHash)
+	fmt.Println("SITE KEY ", siteKey)
+	fmt.Println(errorPlugin)
+	fmt.Println(nPluginInfo)
+	if errorPlugin != nil || nPluginInfo == nil {
+		fmt.Println("TEST ERROR?")
+		if nPluginInfo == nil {
+			fmt.Println("TEST ERROR? 2")
+			fmt.Println(errorPlugin)
+			r := events.APIGatewayProxyResponse{
+				Body: string(fmt.Sprintf("{ \"message\": \"Plugin bootstrap might be already completed\" }")),
+				Headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				StatusCode: 404,
+			}
+			return r, nil
+		}
+		fmt.Println("TEST ERROR? 3")
+	}
+	fmt.Println("TEST ERROR? 4")
 	respObj := &PluginSettings{}
 	// a
 	fmt.Println("Returning response...")

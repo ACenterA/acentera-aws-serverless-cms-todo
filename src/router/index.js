@@ -40,6 +40,7 @@ var plugName = `${PLUGIN_NAME}`
 /* eslint-disable-next-line */
 var adminPluginNameMenu = plugName + ':administration'
 // TODO: We could use this router if we want to limit the application into a setup phase
+
 /*
 export const routerSetup = [
   {
@@ -64,7 +65,6 @@ export const routerSetup = [
   }
 ]
 */
-
 export const routerValid = [
   {
     path: '/',
@@ -77,6 +77,9 @@ export const routerValid = [
     replacePrecedence: 99, // Lower than the Setup Route
     replacePath: '/dashboard',
     hidden: true,
+    meta: {
+      roles: ['admin', 'editor']
+    },
     children: [
       {
         path: '',
@@ -645,6 +648,11 @@ export const routerInvalid = [
     replacePrecedence: 100,
     replacePath: '/dashboard',
     hidden: true,
+    /*
+    meta: {
+      roles: [ 'admin', 'editor']
+    },
+    */
     children: [
       {
         path: 'index',
@@ -655,9 +663,18 @@ export const routerInvalid = [
     ]
   }
 ]
+if (routerInvalid) {
+  console.error('test')
+}
 
 const initRouter = function() {
-  const r = window.app.$router || new Router({
+  var r = null
+  if (window && window.$app && window.$app.$router) {
+    r = window.$app.$router
+    return r
+  }
+  // const res = r || new Router({
+  const res = r || new Router({
     // routerSetup,
     actions: {
       RouteChange() {
@@ -665,7 +682,7 @@ const initRouter = function() {
       }
     }
   })
-  return r
+  return res
 }
 const router = initRouter()
 

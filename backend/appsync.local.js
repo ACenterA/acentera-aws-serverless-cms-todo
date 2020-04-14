@@ -131,7 +131,8 @@ const CF_SCHEMA = yaml.Schema.create([
 ]);
 
 //Read GraphQL schema
-var typeDefs = fs.readFileSync("schema.graphql", "utf8");
+// CEHCK IF go/schema.graphql exists?
+var typeDefs = fs.readFileSync("go/schema.graphql", "utf8");
 var customType = 'scalar AWSDateTime\n'
 typeDefs = customType + typeDefs;
 const schemaAST = parse(typeDefs);
@@ -558,6 +559,7 @@ app.get('/', function (req, res) {
 var isError = false;
 var server = app;
 try {
+	console.error(typeDefs);
 	server = new ApolloServer({
 	    typeDefs,
 	    resolvers,

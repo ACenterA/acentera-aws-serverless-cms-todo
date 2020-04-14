@@ -9,6 +9,11 @@
   ],
   "plugins": [
     "transform-vue-jsx",
+    ["@babel/plugin-transform-runtime",
+      {
+        "regenerator": true
+      }
+    ],
     ["@babel/plugin-proposal-decorators", { "legacy": true }],
     "@babel/plugin-proposal-function-sent",
     "@babel/plugin-proposal-export-namespace-from",

@@ -126,7 +126,6 @@ export default {
       code: ''
     }
   },
-
   mounted() {
     $('body').click(function(evt) {
       if (evt.target.className === 'modal-content' ||

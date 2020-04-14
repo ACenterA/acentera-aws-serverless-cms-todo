@@ -16,7 +16,7 @@
         "rand-token": "^0.4.0"
     },
     "devDependencies": {
-        "apollo-server": "^2.1.0",
+        "apollo-server": "latest",
         "axios": "^0.18.0",
         "aws-sdk": "latest",
         "moment": "latest",

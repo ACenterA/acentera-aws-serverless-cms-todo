@@ -123,7 +123,9 @@ export default {
     }
   },
   created() {
-    this.textInfo = window.app.$t('setupSite.textinfo')
+    console.error('CALLING CREATED A')
+    console.error('CALLING CREATED B')
+    this.textInfo = window.$app.$t('setupSite.textinfo')
   },
   destroyed() {
   },
@@ -153,11 +155,11 @@ export default {
           self.resetForm()
           // window.location.href = '/'
 
-          window.location.href = '/'
-          window.location.reload(true)
+          window.location.href = '/?init=true'
 
           // self.$router.push({ path: '/' })
           setTimeout(function() {
+            // window.location.reload(true)
             self.loading = false
           }, 2000)
         } else {

@@ -15,7 +15,12 @@ import store from '@/store'
 
 import 'assets/css/app.styl'
 
-var VueObj = window.VueObj || Vue
+if (window.VueObj) {
+  console.error('GOT VUE WINDOW?')
+} else {
+  console.error('GOT VUE WINDOW NOPE?')
+}
+var VueObj = Vue // window.VueObj || Vue
 VueObj.use(FormWizard)
 VueObj.use(Element)
 VueObj.use(vueNcform, { extComponents: ncformStdComps, lang: 'fr-ca' })
@@ -71,9 +76,20 @@ window.srtInt = function (on, descending) {
 }
 /* eslint-enable */
 
-if (window.asyncTestRouterMapTemp) {
+if (window.$app) { //
+  // asyncTestRouterMapTemp) {
   // As Plugin
   // console.error('will perform async loading of the routes...')
+  console.error('AS APPPP')
+  // window.$app.mount('#app')
+  /*new Vue({
+    el: '#app',
+    router: window.$app.$router,
+    stoure: window.$app.store,
+    i18n,
+    render: h => h(App)
+  })*/
+  console.error(router)
 } else {
   // As Non Plugin
   /*
@@ -100,9 +116,10 @@ if (window.asyncTestRouterMapTemp) {
       ]
     })
   */
+  console.error('STANDALONE')
   /* eslint-disable-next-line no-new */
   new Vue({
-    el: '#app',
+    el: '#slack-inviteapp',
     router,
     store,
     i18n,

@@ -9,7 +9,7 @@ import (
 	"github.com/acenteracms/acenteralib"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/awslabs/aws-lambda-go-api-proxy/gin"
+	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/myplugin/gofaas"
 	models "github.com/myplugin/gofaas/models"
@@ -98,11 +98,10 @@ func main() {
 	// if (os.Getenv("PLUGIN_ACTION") == "Authorizer") {
 	// lambda.Start(gofaas.NotifyAPIGatewayJWTAuth(gofaas.AuthorizerHandler))
 	// } else {
-
 	if os.Getenv("RUNWS") != "" {
 		r := gin.Default()
 		RegisterRoutes(r)
-		fmt.Println("TEST PORT A\n")
+		fmt.Println("1a - TEST PORT A\n")
 		THEPORT := os.Getenv("CUSTOM_PORT")
 		fmt.Println("TEST PORT A " + THEPORT + "\n")
 		if THEPORT == "" {
