@@ -51,12 +51,12 @@ services:
        HOST: 0.0.0.0
        PORT: 80
        SOCKPORT: 80
-       SOCKHOST: http://cms.dev.acentera
+       SOCKHOST: cms.dev.acentera
        #cms.dev.acentera
        #SOCKPORT: 443
        HTTPS: "true"
        HTTPS: "true"
-       PUBLIC: http://cms.dev.acentera
+       PUBLIC: cms.dev.acentera
        DEV_ACCOUNTID: ${DEV_ACCOUNTID}
        ENV_CONFIG: ${ENV_CONFIG}
        BAD_API_HOST: 127.0.0.1

@@ -149,7 +149,7 @@ export const routerValid = [
     ]
   },
   {
-    path: '/administration',
+    path: '/main/administration',
     id: 3,
     layout: 'Layout',
     hidden: false,

@@ -57,7 +57,7 @@ services:
           - proxy.docker.internal
     environment:
       CORE: 'core.:3003'
-      COREVUE: 'core-vue.:443'
+      COREVUE: 'core-vue.:9000'
       # TODO: We should have an array of ... or something
       PLUGIN_PORT: '3003'
       PLUGIN_NAME: 'serverless-cms'
@@ -85,8 +85,8 @@ services:
           - proxy-core
           - proxy-core.docker.internal
     environment:
-      CORE: 'core-main-vue.docker.internal:443'
-      COREVUE: 'core-main-vue.docker.internal:443'
+      CORE: 'core-main-vue.docker.internal:9000'
+      COREVUE: 'core-main-vue.docker.internal:9000'
       COREAPI: 'core.docker.internal:3003'
       # TODO: We should have an array of ... or something
       #PLUGIN_PORT: '3003'

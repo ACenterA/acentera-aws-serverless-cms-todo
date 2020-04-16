@@ -17,7 +17,6 @@ import 'assets/css/app.styl'
 
 var VueObj = window.VueObj || Vue
 VueObj.use(FormWizard)
-VueObj.use(Element)
 VueObj.use(vueNcform, { extComponents: ncformStdComps, lang: 'fr-ca' })
 // sort on values
 
@@ -71,10 +70,12 @@ window.srtInt = function (on, descending) {
 }
 /* eslint-enable */
 
-if (window.asyncTestRouterMapTemp) {
+if (window && window.$app && window.$app.$store) {
+  console.error('AS PLUGIN HERE')
   // As Plugin
   // console.error('will perform async loading of the routes...')
 } else {
+  console.error('AS PLUGIN HERE - STANDALONE')
   // As Non Plugin
   /*
     window.asyncTestRouterMapTemp.push({

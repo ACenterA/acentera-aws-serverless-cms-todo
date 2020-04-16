@@ -5,7 +5,7 @@
       <el-form ref="passwordForm" :model="passwordForm" class="login-form" auto-complete="on" label-position="left">
         <div class="title-container">
           <br><br><br>
-          <h3 class="title">{{ $t('login.siteConfigErrorReturn') }}</h3>
+          <h3 class="title">{{ $t('login.siteConfigErrorOrCompletedReturn') }}</h3>
         </div>
       </el-form>
     </div>
@@ -35,7 +35,7 @@
         <el-form ref="passwordForm" :model="passwordForm" class="login-form" auto-complete="on" label-position="left">
           <div class="title-container">
             <br><br><br>
-            <a href="/"><h3 class="title">{{ $t('login.siteConfigErrorReturn') }}</h3></a>
+            <a href="/"><h3 class="title">{{ $t('login.siteConfigErrorOrCompletedReturn') }}</h3></a>
           </div>
         </el-form>
       </div>
@@ -44,7 +44,7 @@
       <el-form ref="passwordForm" :model="passwordForm" class="login-form" auto-complete="on" label-position="left">
         <div class="title-container">
           <br><br><br>
-          <h3 class="title">{{ $t('login.siteConfigErrorReturn') }}</h3>
+          <h3 class="title">{{ $t('login.siteConfigErrorOrCompletedReturn') }}</h3>
         </div>
       </el-form>
     </div>
@@ -146,15 +146,16 @@ export default {
       }
     },
     handleInitializeAccount() {
-      this.loading = true
+      console.error('[Plugin] Performing app initialization')
       var self = this
-      this.$store.dispatch('PerformPluginAppInitialization', self.passwordForm).then((resp) => {
+      self.loading = true
+      self.$store.dispatch('PerformPluginAppInitialization', self.passwordForm).then((resp) => {
         if (resp === true) {
           self.resetForm()
           // window.location.href = '/'
 
-          window.location.href = '/'
-          window.location.reload(true)
+          window.location.href = '/?' + new Date()
+          // window.location.reload(true)
 
           // self.$router.push({ path: '/' })
           setTimeout(function() {

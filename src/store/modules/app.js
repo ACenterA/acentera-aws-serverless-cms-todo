@@ -160,10 +160,20 @@ const app = {
           // alert(window.VueObj)
           if (response && response.data) {
             // commit('SET_ACCOUNT_ID', null)
+
             commit('SET_LOADING', false)
             window.preventLoop = false // ?? Hack see in settings ....
             self.dispatch('GetSiteSettings').then(res => { // Required for firstTime loging notification in login page and other plugins infos?
+              window.location.href = '/?' + new Date()
+              setTimeout(function() {
+                self.loading = false
+              }, 2000)
               return resolve(true)
+            }).catch((ex) => {
+              window.location.href = '/?' + new Date()
+              setTimeout(function() {
+                self.loading = false
+              }, 2000)
             })
           } else {
             return resolve(false)

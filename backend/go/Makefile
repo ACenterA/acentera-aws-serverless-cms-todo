@@ -68,7 +68,7 @@ $(HANDLERS): handlers/%/main: *.go handlers/%/main.go
 #$(HANDLERS): handlers/%/main: *.go handlers/%/main.go vendor
 	if [ "$(dir $@)" = "handlers/website-public/" -o "$(dir $@)" = "handlers/migration/" ]; then cd ./$(dir $@) && GOOS=linux go build -ldflags "-s -w" -tags=test -o main .; else cd ./$(dir $@) && GOOS=linux go build -ldflags "-s -w" -o main .; fi;
 	if [ "$(dir $@)" = "handlers/shell/" ]; then cd ./$(dir $@) && env GOOS=linux GOARCH=arm64 GOARM=5 go build -o main-arm .; fi;
-	if [ "$(dir $@)" = "handlers/app/" ]; then cd ./$(dir $@) && cp -f *.yaml /go/src/github.com/acenteracms/acenteralib/. && cp -f main /go/src/github.com/acenteracms/acenteralib/. && cd /go/src/github.com/acenteracms/acenteralib/ && ./main; fi;
+	if [ "$(dir $@)" = "handlers/app/" ]; then cd ./$(dir $@) && cp -f *.yaml /go/src/github.com/acenteracms/acenteralib/. && cp -f main /go/src/github.com/acenteracms/acenteralib/.; fi;
 
 HANDLERS_JS=$(addsuffix node_modules,$(wildcard web/handlers/*/))
 $(HANDLERS_JS): web/handlers/%/node_modules: web/handlers/%/package.json
