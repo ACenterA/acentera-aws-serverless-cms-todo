@@ -657,7 +657,7 @@ export const routerInvalid = [
 ]
 
 const initRouter = function() {
-  const r = window.app.$router || new Router({
+  const r = window.$app.$router || new Router({
     // routerSetup,
     actions: {
       RouteChange() {

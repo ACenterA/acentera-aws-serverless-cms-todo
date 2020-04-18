@@ -123,7 +123,7 @@ export default {
     }
   },
   created() {
-    this.textInfo = window.app.$t('setupSite.textinfo')
+    this.textInfo = window.$app.$t('setupSite.textinfo')
   },
   destroyed() {
   },

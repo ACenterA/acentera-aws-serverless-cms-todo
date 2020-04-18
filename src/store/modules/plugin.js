@@ -24,8 +24,7 @@ const plugin = {
   },
   actions: {
     GetPluginRoutes({ commit }, data) {
-      console.error('[PLUGIN:GetPluginRoutes] REceived event')
-      console.error(data)
+      // console.log('[PLUGIN:GetPluginRoutes] REceived event')
       if (data === plugName) {
         const routerRoutes = routerValid
         const Obj = {
@@ -72,7 +71,7 @@ const plugin = {
           // ie: if (res.IsConfigured) { show all routes } else { show only route and menu X for wizard configuration }
           // add all routes to be loaded ...
           if (res < 0) {
-            console.error('IN HERE WILL RETURN 404??')
+            // console.error('IN HERE WILL RETURN 404??')
             routeInfo.next({ path: '/login' })
             // store.commit('NPROGRESS_END')
             return
@@ -81,7 +80,7 @@ const plugin = {
         }).then((res) => {
           // We could limit the roles to only X if we want ...
           // Everything is ready to be displayed
-          console.error('OK READY COMPLETED')
+          // console.error('OK READY COMPLETED')
           routeInfo.next({ ...routeInfo.to, replace: true })
           // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
           // return
@@ -94,7 +93,7 @@ const plugin = {
     },
     RouteChange(store) {
       // console.error('route change occured ')
-      // console.error('NEW ROUTE:', window.app.$router)
+      // console.error('NEW ROUTE:', window.$app.$router)
       // console.error(store)
     }
   }

@@ -71,11 +71,11 @@ window.srtInt = function (on, descending) {
 /* eslint-enable */
 
 if (window && window.$app && window.$app.$store) {
-  console.error('AS PLUGIN HERE')
+  // console.error('AS PLUGIN HERE')
   // As Plugin
   // console.error('will perform async loading of the routes...')
 } else {
-  console.error('AS PLUGIN HERE - STANDALONE')
+  // console.error('AS PLUGIN HERE - STANDALONE')
   // As Non Plugin
   /*
     window.asyncTestRouterMapTemp.push({

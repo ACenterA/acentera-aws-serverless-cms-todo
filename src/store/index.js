@@ -11,7 +11,7 @@ import app from './modules/app'
 // import cloudformation from './modules/cloudformation'
 Vue.use(Vuex)
 
-let store = window.app.$store
+let store = window.$app.$store
 
 const initStore = () => {
   return store || (store = new Vuex.Store({

@@ -28,9 +28,9 @@ const i18n = new VueI18n({
 })
 
 /* Extend i18n messages */
-if (window.app._i18n) {
+if (window.$app._i18n) {
   for (var k in messages) {
-    window.app._i18n.mergeLocaleMessage(k, messages[k])
+    window.$app._i18n.mergeLocaleMessage(k, messages[k])
   }
 }
 
