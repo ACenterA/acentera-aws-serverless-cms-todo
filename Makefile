@@ -19,12 +19,21 @@ help:
 	@printf '\n'
 	@printf '=======================================\n'
 
+proxy: 
+	@printf '[>] Provisioning the docker containers\n'                                        
+	docker-compose -f docker-compose-core-db.yml up -d proxy-core
+	#--force-recreate
 dev: 
 	@printf '[>] Provisioning the docker containers\n'                                        
 	docker-compose -f docker-compose.yml -f docker-compose-core.yml -f docker-compose-core-db.yml up -d --build
 	#--force-recreate
 
 dev-plugin:
+	@printf '[>] Provisioning the docker containers\n'                                        
+	docker-compose -f docker-compose.yml up -d --build
+	#--force-recreate
+
+dev-plugin-with-db:
 	@printf '[>] Provisioning the docker containers\n'                                        
 	docker-compose -f docker-compose.yml -f docker-compose-core-db.yml up -d --build
 	#--force-recreate

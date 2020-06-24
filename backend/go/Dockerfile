@@ -9,4 +9,7 @@ RUN go get -u github.com/ACenterA/gqlmerge
 RUN mkdir -p /go/src/github.com/myplugin/gofaas
 RUN mkdir -p /go/src/github.com/acenteracms/acentralib
 WORKDIR /go/src/github.com/myplugin/gofaas
+
+#ENV FAST_ENTRYPOINT restapi-handlers/restapi/main
+ENV FAST_ENTRYPOINT handlers/app/
 ADD backend/go/Makefile /tmp/Makefile

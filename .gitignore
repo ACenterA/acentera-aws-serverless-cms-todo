@@ -92,3 +92,4 @@ backend/template.yml
 backend/go/schema/
 node_modules/
 node_modules
+backend/go/handlers/*/main

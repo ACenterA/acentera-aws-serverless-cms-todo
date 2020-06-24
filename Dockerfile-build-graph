@@ -1,0 +1,15 @@
+# ARG UID
+# ARG USER=acentera
+# ARG GID
+FROM acentera/prod:acentera-node-graph-0.0.2
+WORKDIR /usr/app
+
+#USER acentera
+
+COPY backend/package.json /usr/app/package.json
+RUN npm install && rm -f /usr/app/package*.json
+
+#COPY backend/appsync.local.js /usr/app/appsync.local.js
+COPY backend/appsync.local.js /usr/app/backend/appsync.local.js
+#COPY backend/go/template.yml /usr/app/template.yml
+#COPY backend/go/schema.graphql /usr/app/schema.graphql

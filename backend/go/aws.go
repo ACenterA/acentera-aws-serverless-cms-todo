@@ -11,8 +11,11 @@ import (
 	// "github.com/aws/aws-lambda-go/cfn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -136,6 +139,54 @@ type IAMAPI interface {
 }
 type HandlerAPIGatewayWithJWT func(context.Context, jwt.Claims, RequestObject, events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
 
+type COGNITOIDENTITYAPI interface {
+	UpdateUserPoolClientWithContext(ctx aws.Context, input *cognitoidentityprovider.UpdateUserPoolClientInput, opts ...request.Option) (*cognitoidentityprovider.UpdateUserPoolClientOutput, error)
+	UpdateUserPoolClient(input *cognitoidentityprovider.UpdateUserPoolClientInput) (*cognitoidentityprovider.UpdateUserPoolClientOutput, error)
+	CreateUserPoolDomainWithContext(ctx aws.Context, input *cognitoidentityprovider.CreateUserPoolDomainInput, opts ...request.Option) (*cognitoidentityprovider.CreateUserPoolDomainOutput, error)
+	CreateUserPoolDomain(input *cognitoidentityprovider.CreateUserPoolDomainInput) (*cognitoidentityprovider.CreateUserPoolDomainOutput, error)
+	DeleteUserPoolDomainWithContext(ctx aws.Context, input *cognitoidentityprovider.DeleteUserPoolDomainInput, opts ...request.Option) (*cognitoidentityprovider.DeleteUserPoolDomainOutput, error)
+	DeleteUserPoolDomain(input *cognitoidentityprovider.DeleteUserPoolDomainInput) (*cognitoidentityprovider.DeleteUserPoolDomainOutput, error)
+	DescribeUserPoolDomainWithContext(ctx aws.Context, input *cognitoidentityprovider.DescribeUserPoolDomainInput, opts ...request.Option) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error)
+	DescribeUserPoolDomain(input *cognitoidentityprovider.DescribeUserPoolDomainInput) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error)
+	CreateGroupWithContext(ctx aws.Context, input *cognitoidentityprovider.CreateGroupInput, opts ...request.Option) (*cognitoidentityprovider.CreateGroupOutput, error)
+	CreateGroup(input *cognitoidentityprovider.CreateGroupInput) (*cognitoidentityprovider.CreateGroupOutput, error)
+	GetGroupWithContext(ctx aws.Context, input *cognitoidentityprovider.GetGroupInput, opts ...request.Option) (*cognitoidentityprovider.GetGroupOutput, error)
+	GetGroup(input *cognitoidentityprovider.GetGroupInput) (*cognitoidentityprovider.GetGroupOutput, error)
+	AdminCreateUserWithContext(ctx aws.Context, input *cognitoidentityprovider.AdminCreateUserInput, opts ...request.Option) (*cognitoidentityprovider.AdminCreateUserOutput, error)
+	AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)
+	AdminAddUserToGroupWithContext(ctx aws.Context, input *cognitoidentityprovider.AdminAddUserToGroupInput, opts ...request.Option) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
+	AdminAddUserToGroup(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
+	GetUserWithContext(ctx aws.Context, input *cognitoidentityprovider.GetUserInput, opts ...request.Option) (*cognitoidentityprovider.GetUserOutput, error)
+	GetUser(input *cognitoidentityprovider.GetUserInput) (*cognitoidentityprovider.GetUserOutput, error)
+	AdminGetUserWithContext(ctx aws.Context, input *cognitoidentityprovider.AdminGetUserInput, opts ...request.Option) (*cognitoidentityprovider.AdminGetUserOutput, error)
+	AdminGetUser(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
+	AdminInitiateAuthRequest(input *cognitoidentityprovider.AdminInitiateAuthInput) (req *request.Request, output *cognitoidentityprovider.AdminInitiateAuthOutput)
+	InitiateAuthWithContext(ctx aws.Context, input *cognitoidentityprovider.InitiateAuthInput, opts ...request.Option) (*cognitoidentityprovider.InitiateAuthOutput, error)
+	InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
+	AssociateSoftwareTokenWithContext(ctx aws.Context, input *cognitoidentityprovider.AssociateSoftwareTokenInput, opts ...request.Option) (*cognitoidentityprovider.AssociateSoftwareTokenOutput, error)
+	AssociateSoftwareToken(input *cognitoidentityprovider.AssociateSoftwareTokenInput) (*cognitoidentityprovider.AssociateSoftwareTokenOutput, error)
+	VerifySoftwareTokenWithContext(ctx aws.Context, input *cognitoidentityprovider.VerifySoftwareTokenInput, opts ...request.Option) (*cognitoidentityprovider.VerifySoftwareTokenOutput, error)
+	VerifySoftwareToken(input *cognitoidentityprovider.VerifySoftwareTokenInput) (*cognitoidentityprovider.VerifySoftwareTokenOutput, error)
+	AdminSetUserMFAPreferenceWithContext(ctx aws.Context, input *cognitoidentityprovider.AdminSetUserMFAPreferenceInput, opts ...request.Option) (*cognitoidentityprovider.AdminSetUserMFAPreferenceOutput, error)
+	AdminSetUserMFAPreference(input *cognitoidentityprovider.AdminSetUserMFAPreferenceInput) (*cognitoidentityprovider.AdminSetUserMFAPreferenceOutput, error)
+	SetUserMFAPreference(input *cognitoidentityprovider.SetUserMFAPreferenceInput) (*cognitoidentityprovider.SetUserMFAPreferenceOutput, error)
+	SetUserPoolMfaConfig(input *cognitoidentityprovider.SetUserPoolMfaConfigInput) (*cognitoidentityprovider.SetUserPoolMfaConfigOutput, error)
+	AdminConfirmSignUp(input *cognitoidentityprovider.AdminConfirmSignUpInput) (*cognitoidentityprovider.AdminConfirmSignUpOutput, error)
+	AdminSetUserPassword(input *cognitoidentityprovider.AdminSetUserPasswordInput) (*cognitoidentityprovider.AdminSetUserPasswordOutput, error)
+}
+type COGNITOIDENTITY interface {
+	GetOpenIdTokenWithContext(ctx aws.Context, input *cognitoidentity.GetOpenIdTokenInput, opts ...request.Option) (*cognitoidentity.GetOpenIdTokenOutput, error)
+	GetOpenIdToken(input *cognitoidentity.GetOpenIdTokenInput) (*cognitoidentity.GetOpenIdTokenOutput, error)
+	GetIdWithContext(ctx aws.Context, input *cognitoidentity.GetIdInput, opts ...request.Option) (*cognitoidentity.GetIdOutput, error)
+	GetId(input *cognitoidentity.GetIdInput) (*cognitoidentity.GetIdOutput, error)
+	GetCredentialsForIdentityWithContext(ctx aws.Context, input *cognitoidentity.GetCredentialsForIdentityInput, opts ...request.Option) (*cognitoidentity.GetCredentialsForIdentityOutput, error)
+	GetCredentialsForIdentity(input *cognitoidentity.GetCredentialsForIdentityInput) (*cognitoidentity.GetCredentialsForIdentityOutput, error)
+	GetIdentityPoolRolesWithContext(ctx aws.Context, input *cognitoidentity.GetIdentityPoolRolesInput, opts ...request.Option) (*cognitoidentity.GetIdentityPoolRolesOutput, error)
+	GetIdentityPoolRoles(input *cognitoidentity.GetIdentityPoolRolesInput) (*cognitoidentity.GetIdentityPoolRolesOutput, error)
+	SetIdentityPoolRoles(input *cognitoidentity.SetIdentityPoolRolesInput) (*cognitoidentity.SetIdentityPoolRolesOutput, error)
+	// GetIdentityPoolRolesWithContext(ctx aws.Context, input *cognitoidentity.GetIdentityPoolRolesInput) (*cognitoidentity.GetIdentityPoolRolesOutput, error)
+}
+
 // type NotifyAPIGatewayJWTSecured func(context.Context, jwt.Claims, RequestObject, events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
 
 /*
@@ -170,19 +221,49 @@ var (
 		MaxRetries: aws.Int(5),
 	},
 	))
+
+	cognitoSess = session.Must(session.NewSession(&aws.Config{Region: aws.String(os.Getenv("AWS_DEFAULT_REGION"))}))
+
 	DynamoDB = NewDynamoDB()
 	S3       = NewS3()
 	EC2      = NewEC2()
 	IAM      = NewIAM()
 	ASG      = NewASG(sess)
+	CognitoIdentityServiceProvider = NewCognitoIdentityServiceProvider()
+	CognitoIdentity                = NewCognitoIdentity()
 	ECS      = NewECS(sess)
 )
 
+// NewKMS is an xray instrumented KMS client
+func NewCognitoIdentityServiceProvider() COGNITOIDENTITYAPI {
+	c := cognitoidentityprovider.New(cognitoSess)
+	// xray.AWS(c.Client)
+	return c
+}
+
+func NewCognitoIdentity() COGNITOIDENTITY {
+	c := cognitoidentity.New(cognitoSess)
+	// xray.AWS(c.Client)
+	return c
+}
+
 func NewDynamoDB() DynamoDBAPI {
-	fmt.Println("OK TEST DYNAMO OF")
+	fmt.Println("1a OK TEST DYNAMO OF")
 	fmt.Println(IfThenElse(os.Getenv("AWS_SAM_LOCAL") == "true", "http://dynamodb:8000", ""))
-	fmt.Println("OK TEST DYNAMO OF - 1")
-	c := dynamodb.New(sess)
+	fmt.Println("1a OK TEST DYNAMO OF - 1")
+
+	sessTmp := sess
+	if (os.Getenv("AWS_SAM_LOCAL") == "true") {
+		fmt.Println("1a OK TEST DYNAMO OF IN SAM LOCAL")
+		sessTmp = session.Must(session.NewSession(&aws.Config{
+			Endpoint:   aws.String(IfThenElse(os.Getenv("AWS_SAM_LOCAL") == "true", "http://dynamodb:8000", "")),
+			Credentials: credentials.NewStaticCredentials("a", "a", ""),
+			MaxRetries: aws.Int(5),
+		},
+		))
+	}
+
+	c := dynamodb.New(sessTmp)
 	// xray.AWS(c.Client)
 	return c
 }

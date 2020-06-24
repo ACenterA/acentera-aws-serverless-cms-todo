@@ -31,46 +31,23 @@ regen_graphql: build-ui
 	cp -f sam/graphql.sam /out/template.yml && chmod o+rw /out/template.yml
 	cp -f schema.graphql /out/.  && chmod o+rw /out/schema.graphql
 	cp -f models.sam handlers/app/conf.yaml && chmod o+rw handlers/app/conf.yaml
-	echo "FAST ENTRYPOINT IS : ${FAST_ENTRYPOINT}"
-	cp -f models.sam ${FAST_ENTRYPOINT}/conf.yaml && chmod o+rw ${FAST_ENTRYPOINT}/conf.yaml
 	cp -f template.yml /dist/. || true
 	cp -Rfp /go/src/github.com/myplugin/gofaas/handlers /dist/. || true
 	cp -f schema.graphql /dist/.
 
-cpy:
-	cd /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/ && GOOS=linux go build -ldflags "-s -w" -o main . && cd -
-	cp -Rfp /go/src/github.com/myplugin/gofaas/*handlers* /dist/. || true
-	find /dist/ -iname '*.go' -exec rm {} \;
-	cp -f schema.graphql /dist/. || true
-	cp -f template.yml /dist/. || true
-
-dev: regen_graphql handlers cpy
+dev: regen_graphql
 	export GOOS=linux
 	mkdir -p /opt; ln -snf /go/src/github.com/acenteracms/acenteralib/aws.so /opt/aws.so
 	#make -j dev-watch dev-sam dev-local
 
-dev-go: cpy
+dev-go:
 	echo "OK DEV-GO CALLED"
-	echo "Test RMRTETST2";
-	#I=1 && while [ ! /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main -nt /go/src/github.com/myplugin/gofaas/.main ]; do \
-	#	echo "Test RMRTETST3"; \
-	#	echo "Watiting for compilation..."; \
-	#	sleep 5; \
-	#	I=$$((I+1)); \
-	#	if [ "$${I}" -gt 5 ]; then \
-        #         break; \
-        #        fi; \
-	#done
-	#cp -Rfp /go/src/github.com/myplugin/gofaas/*handlers* /dist/. || true
-	#find /dist/ -iname '*.go' -exec rm {} \;
-	#cp -f schema.graphql /dist/. || true
-	#cp -f template.yml /dist/. || true
+	cp -Rfp /go/src/github.com/myplugin/gofaas/*handlers* /dist/. || true
+	find /dist/ -iname '*.go' -exec rm {} \;
+	cp -f schema.graphql /dist/. || true
+	cp -f template.yml /dist/. || true
 	kill -9 "$$(cat /tmp/sam3.pid)" || true
-	env > /tmp/kkkkkkkl && echo "Launching Fast GO" && { SKIP_COGNITO=true SITE=${PLUGIN_KEY} AWS_SAM_LOCAL=true CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main & }; echo $$! > /tmp/sam3.pid
-	#env > /tmp/kkkkkkkl && echo "Launching Fast GO" && { SKIP_COGNITO=true SITE=${PLUGIN_KEY} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-'a'} AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-'a'} AWS_SAM_LOCAL=true CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main & }; echo $$! > /tmp/sam3.pid
-	ps auxwww | grep main
-	cat /tmp/sam3.pid
-	echo 'DONE'
+	env > /tmp/kkkkkkkl && echo "Launching Fast GO" && { SKIP_COGNITO=true SITE=${PLUGIN_KEY} AWS_SECRET_ACCESS_KEY=a AWS_ACCESS_KEY_ID=a AWS_SAM_LOCAL=true CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main & echo $$! > /tmp/sam3.pid; }
 
 dev-sam:
 	kill -9 "$$(cat /tmp/sam.pid)" || true
@@ -78,16 +55,15 @@ dev-sam:
 	kill -9 "$$(cat /tmp/sam2.pid)" || true
 	echo "Launching INVOKE" && { sam local start-api --force-image-build --debug --host 0.0.0.0 -p 3000 --docker-volume-basedir "${HOME_PWD}/" --docker-network ${DOCKER_NETWORK} -s web/static & echo $$! > /tmp/sam2.pid; }
 	#kill -9 "$$(cat /tmp/sam3.pid)" || true
-	#echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main & echo $$! > /tmp/sam3.pid; }
-	#echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main; }
+	#echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main & echo $$! > /tmp/sam3.pid; }
+	#echo "Launching Fast GO" && { CUSTOM_PORT=3003 /go/src/github.com/myplugin/gofaas/handlers/app/main; }
 
 removeapp:
-	if [ -e /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main ]; then
-	  rm -f /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main; \
+	if [ -e /go/src/github.com/myplugin/gofaas/handlers/app/main ]; then
+	  rm -f /go/src/github.com/myplugin/gofaas/handlers/app/main; \
+	  touch /go/src/github.com/myplugin/gofaas/handlers/app/main.go; \
 	fi
 
-	# touch /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main.go; \
-		#
 build-ui:
 	(mkdir -p /usr/local/go/src/github.com/acenterastatic/static/ && cd /ui && go-bindata -o /usr/local/go/src/github.com/acenterastatic/static/main.go -pkg static dist/...) || true
 	cp -f /usr/local/go/src/github.com/acenterastatic/static/main.go /go/src/github.com/acenterastatic/static/. || true
@@ -98,20 +74,14 @@ dev-watch:
 	watchexec -f '*.yml' -s SIGKILL -r 'make -j dev-sam' &
 	go build -i
 	watchexec -f '*.go' -s SIGKILL -r 'make -j handlers; make -j dev-go' &
-	find . -maxdepth 4 -type f -iname main.go -exec touch {} \;
-	sleep 1; touch ${FAST_ENTRYPOINT}/main.go
+	sleep 1; touch handlers/app/main.go
 	watchexec -w schema -e graphql -r 'make regen_graphql'
 
-#build-all:
-#	for f in $(ls -d *handlers*); do find $f -type d -exec (cd ${d};done;
 
 HANDLERS=$(addsuffix main,$(wildcard *handlers*/*/))
-$(HANDLERS): handlers/%/main: *.go handlers/%/main.go
+$(HANDLERS): *handlers*/%/main: *.go *handlers*/%/main.go
 #$(HANDLERS): handlers/%/main: *.go handlers/%/main.go vendor
-	(ps -ef | grep "${FAST_ENTRYPOINT}/" |grep -v grep | awk '{ print $2 }' |xargs kill ) || true
-	# (cd ./$(dir $@) && mv -f main main.$$; rm -f main.$$; cd -) || true
-	cd ./$(dir $@) && GOOS=linux go build -ldflags "-s -w" -o main . && cd -
-	cd /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/ && GOOS=linux go build -ldflags "-s -w" -o main . && cd -
+	cd ./$(dir $@) && GOOS=linux go build -ldflags "-s -w" -o main .
 	if [ "$(dir $@)" = "handlers/website-public/" -o "$(dir $@)" = "handlers/migration/" ]; then cd ./$(dir $@) && GOOS=linux go build -ldflags "-s -w" -tags=test -o main .; else cd ./$(dir $@) && GOOS=linux go build -ldflags "-s -w" -o main .; fi;
 	if [ "$(dir $@)" = "handlers/shell/" ]; then cd ./$(dir $@) && env GOOS=linux GOARCH=arm64 GOARM=5 go build -o main-arm .; fi;
 	if [ "$(dir $@)" = "handlers/app/" ]; then cd ./$(dir $@) && cp -f *.yaml /go/src/github.com/acenteracms/acenteralib/. && cp -f main /go/src/github.com/acenteracms/acenteralib/.; fi;
@@ -121,20 +91,11 @@ $(HANDLERS_JS): web/handlers/%/node_modules: web/handlers/%/package.json
 	cd ./$(dir $@) && npm install && node-prune >/dev/null && touch node_modules
 
 rmtest:
-	if [ -e /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main ]; then \
-		echo > /go/src/github.com/myplugin/gofaas/.main; \
-	fi
-	echo "AAA";
-	if [ -e /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main ]; then \
-		echo "CCC"; \
-		if [ /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main.go -nt /go/src/github.com/myplugin/gofaas/.main ]; then \
-			echo "DDD"; \
-			touch /go/src/github.com/myplugin/gofaas/${FAST_ENTRYPOINT}/main.go; \
-			touch /go/src/github.com/myplugin/gofaas/.main; \
-		fi; \
+	if [ -e /go/src/github.com/myplugin/gofaas/handlers/app/main ]; then \
+		echo > /go/src/github.com/myplugin/gofaas/handlers/app/.main; \
 	fi
 
-handlers: rmtest handlers-go handlers-js build-all
+handlers: rmtest handlers-go handlers-js
 handlers-go: $(HANDLERS)
 handlers-js: $(HANDLERS_JS)
 

@@ -1,0 +1,43 @@
+FROM acentera/dev:aws-graphql-backend-src-v0.0.1 AS BASE
+
+RUN echo "1"
+
+FROM acentera/prod:golang-base-compile-0.0.2
+
+RUN pip install yq
+
+RUN go get -u github.com/jinzhu/copier
+RUN go get -u github.com/gertd/go-pluralize
+RUN go get -u github.com/ACenterA/gqlmerge
+RUN go get -u github.com/go-bindata/go-bindata/...
+
+#RUN go get -u github.com/sirupsen/logrus && \
+#    go get -u golang.org/x/sys/unix && \
+
+RUN rm -fr /go/src/golang.lorg || true
+
+COPY --from=BASE /go/src /go/src
+RUN rm -fr /go/src/github.com/mattn/go-isatty && \
+    rm -fr /go/src/golang.org/x && \
+    go get golang.org/x/sys/unix && \
+    go get github.com/gin-gonic/gin
+
+#COPY --from=BASE /go/src/golang.org /go/src/golang.org
+#COPY --from=BASE /go/src/github.com/nzoschke/gofaas /go/src/github.com/nzoschke/gofaas
+#COPY --from=BASE /go/src/github.com/acenteracms/acenteralib /go/src/github.com/acenteracms/acenteralib
+
+# go-bindata -o /go/src/github.com/nzoschke/gofaas/static/main.go -pkg static dist/...
+
+RUN mkdir -p /go/src/github.com/myplugin/gofaas
+RUN mkdir -p /go/src/github.com/acenteracms/acentralib
+WORKDIR /go/src/github.com/myplugin/gofaas
+ADD backend/go/Makefile /tmp/Makefile
+
+ADD ./backend/go/ /go/src/github.com/myplugin/gofaas
+
+ENV FAST_ENTRYPOINT restapi-handlers/restapi/
+ADD ./backend/go/README.md /go/src/github.com/myplugin/gofaas/README.md
+ADD ./backend/go/LICENSE /go/src/github.com/myplugin/gofaas/LICENSE
+# ADD ./src/gql/schema:/go/src/github.com/myplugin/gofaas/schema
+# ADD ./go/shared:${PWD}/backend/go/shared
+# ADD ./backend/go/customvendors/static:/go/src/github.com/acenterastatic/static
