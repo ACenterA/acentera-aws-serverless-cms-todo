@@ -25,10 +25,14 @@ deploy-static: web/static/index.html
 	aws cloudformation describe-stacks --output text --query 'Stacks[*].Outputs' --stack-name $(APP)
 
 regen_graphql: build-ui
-	[ -e schema.graphql ] && rm -fr schema.graphql || true
+	([ -e schema.graphql ] && rm -fr schema.graphql) || true
+	([ -e sam/graphql.sam ] && cp -f sam/graphql.sam .) || true
+	cp -f graphql.sam graphql.tmpl && chmod o+rw graphql.tmpl
 	gqlmerge ./schema schema.graphql
-	cp -f sam/graphql.sam template.yml && chmod o+rw template.yml
-	cp -f sam/graphql.sam /out/template.yml && chmod o+rw /out/template.yml
+	cp -f graphql.sam template.yml && chmod o+rw template.yml
+	cp -f graphql.sam /out/template.yml && chmod o+rw /out/template.yml
+	# bad cp -f sam/graphql.sam template.yml && chmod o+rw template.yml
+	# bad cp -f sam/graphql.sam /out/template.yml && chmod o+rw /out/template.yml
 	cp -f schema.graphql /out/.  && chmod o+rw /out/schema.graphql
 	cp -f models.sam handlers/app/conf.yaml && chmod o+rw handlers/app/conf.yaml
 	echo "FAST ENTRYPOINT IS : ${FAST_ENTRYPOINT}"

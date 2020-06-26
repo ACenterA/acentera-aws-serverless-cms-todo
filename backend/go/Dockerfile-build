@@ -1,6 +1,6 @@
 FROM acentera/dev:aws-graphql-backend-src-v0.0.1 AS BASE
 
-RUN echo "1"
+RUN echo "2"
 
 FROM acentera/prod:golang-base-compile-0.0.2
 

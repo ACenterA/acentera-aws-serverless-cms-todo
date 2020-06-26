@@ -450,7 +450,7 @@ Resources:
             PathPattern: 
                Fn::Sub: "/api/plugins/<%PLUGIN_NAME%>/static/*" # Path pattern after the Gateway stage identifier.
             TargetOriginId:
-               Fn::Sub: Plugin-<%PLUGIN_NAME%>-Api" #id of the orignin
+               Fn::Sub: "Plugin-<%PLUGIN_NAME%>-Api" #id of the orignin
             ViewerProtocolPolicy: https-only #API Gateway only support https
 
           - AllowedMethods: #allow all method for the backend to implement

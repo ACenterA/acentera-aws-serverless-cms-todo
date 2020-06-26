@@ -8,6 +8,8 @@ import (
 	"crypto/md5"
 	"log"
 
+	"reflect"
+
 	resolvers "github.com/sbstjn/appsync-resolvers"
 	// 	 "reflect"
 	"fmt"
@@ -37,9 +39,45 @@ import (
 
 // ID Is always a String
 // https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
+
+/*
+type SharedLib interface {
+	NotifyAPIGatewayJWTSecured(h func(SharedLib, context.Context, RequestObject, events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)) func(context.Context, events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
+NotifyAPIGatewayJWTSecured(h func(SharedLib, context.Context, RequestObject, events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)) func(context.Context, events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
+*/
+// type func(*acenteralib.RequestObject, map[string]interface {}, models.ListPaginatedGenericInput) (*map[string]interface {}, error))
+/*
+type SharedResolvers interface {
+	Fct func(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input interface{}) (*map[string]interface{}, error)
+}
+*/
+type CustomResolverFCT func(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input interface{}) (*map[string]interface{}, error)
+type CustomResolverFCTResp func(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input interface{}) (*map[string]interface{}, error)
+// NotifyAPIGateway wraps a handler func and sends an SNS notification on error
+/*
+func NotifyAPIGateway(h CustomResolverFCT) HandlerAPIGateway {
+	//TODO: Implement Authorizer?
+	return func(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input interface{}) {
+	// return func(ctx context.Context, e events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+		r, err := h(ctx, e)
+		notify(ctx, err)
+		return r, err
+	}
+}
+*/
+
 var (
 	SELF         = "SELF"
 	CustomModels = make(map[string]Models, 0)
+	Func_Names   =  make([]string, 0)
+	Func_Iface   =  make(map[string]string, 0)
+	// Func_Map     =  map[string] func(*acenteralib.RequestObject, map[string]interface {}, interface {}) CustomResolverFCT {
+	// Func_Map     =  map[string] func() CustomResolverFCT {
+	Func_Map     =  map[string] reflect.Value { // *interface{} { map[string] reflect.Type { // *interface{} {
+	// Func_Map     =  map[string]CustomResolverFCT {
+	// Func_Map     =  map[string]func(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input interface{}) (*map[string]interface{}, error) {
+		// "test": test,
+	}
 )
 
 type ErrModel struct {
@@ -162,7 +200,7 @@ type updateInputEvent struct {
 	Type  string                 `json:"type,omitempty"`
 }
 
-type listPaginatedGenericInput struct {
+type ListPaginatedGenericInput struct {
 	Input map[string]interface{} `json:"input"`
 	//bad	ParentType  string                 `json:"parent_type,omitempty"`
 	//bad	ParentValue string                 `json:"parent_value,omitempty"`
@@ -361,7 +399,7 @@ func (p GenericHandler) HandleUpdateGeneric(reqObj *acenteralib.RequestObject, i
 func (p GenericHandler) HandleListAll(reqObj *acenteralib.RequestObject, identity map[string]interface{}) (*PaginatedGeneric, error) {
 	// TODO ADD SECURITY
 	// Element Type ?
-	queryInput := listPaginatedGenericInput{
+	queryInput := ListPaginatedGenericInput{
 		Limit: 100,
 	}
 
@@ -385,14 +423,193 @@ func (p GenericHandler) HandleListAll(reqObj *acenteralib.RequestObject, identit
 	return output, err
 }
 
-func (p GenericHandler) HandleListAdmin(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input listPaginatedGenericInput) (*PaginatedGeneric, error) {
-	return p.handleList(false, reqObj, identity, input)
-}
-func (p GenericHandler) HandleList(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input listPaginatedGenericInput) (*PaginatedGeneric, error) {
-	return p.handleList(false, reqObj, identity, input)
-}
-func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject, identity map[string]interface{}, input listPaginatedGenericInput) (*PaginatedGeneric, error) {
+func (p GenericHandler) HandleGet(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*map[string]interface{}, error) {
+	fmt.Println("HANDLE GET HERE")
+	fmt.Println("IDENTITY IS:", identity)
+	fmt.Println("INPUT IS: ", input)
 
+	id := ""
+	if val, ok := input.Input["id"]; ok {
+		//do something here
+		id = val.(string)
+	}
+
+	if (id != "") {
+		// OK WE GOT AN ID...
+		elementType := p.ElementType
+		if elementType == "" {
+			elementType = input.Type
+		}
+
+		respQ, err := p.handleGetByIdAndPk(false, reqObj, identity, input, id, elementType)
+		if (respQ == nil) {
+			return nil, err
+		}
+		if (respQ.Items == nil) {
+			// Not Found
+			return nil, err
+		}
+		if len(respQ.Items) <= 0 {
+			fmt.Println("Empty not found")
+			// ff := make(map[string]interface{},0)
+			// return &ff, nil
+			return nil, errors.New(fmt.Sprintf("Not found"))
+			// return nil, err
+		}
+		return respQ.Items[0], err
+	}
+	/*
+	lstInput := ListPaginatedGenericInput{
+		Input: input,
+	}
+	*/
+	respQ, err := p.handleListWithFilter(false, reqObj, identity, input)
+	if (err != nil) {
+		return nil, err
+	}
+	if len(respQ.Items) <= 0 {
+		fmt.Println("Empty not found")
+		// ff := make(map[string]interface{},0)
+		// return &ff, nil
+		return nil, errors.New(fmt.Sprintf("Not found"))
+		// return nil, err
+	}
+	return respQ.Items[0], nil
+}
+
+
+func (p GenericHandler) handleGetByIdAndPk(admin bool, reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput, id string, sk string) (*PaginatedGeneric, error) {
+
+	fmt.Println("HANDLE handleGetByIdAndPk HERE A")
+	/*
+	elementType := p.ElementType
+	if elementType == "" {
+		elementType = input.Type
+	}
+	*/
+	elementType := sk
+
+	fmt.Println("TODO: GETPK Add Security using the reqObj.User / Roles ... or the reqObj.Session")
+	if reqObj.User != nil {
+		fmt.Println(reqObj.User.Username)
+		fmt.Println(reqObj.User.Roles)
+	}
+
+	// TODO: Get this from end-user session?
+	parent := ""
+	if val, ok := input.Input["parent"]; ok {
+		//do something here
+		parent = val.(string)
+	}
+
+	fmt.Println("HANDLE GETPK  HERE C")
+	fmt.Println("GOT GETPK PARENT TST", parent)
+	if parent == "" {
+		fmt.Println("GOT MODEL ", p.Models.Parent)
+		if p.Models.Parent != "" {
+			fmt.Println("test if input as it .. in ", input.Input)
+			if val, ok := input.Input[p.Models.Parent]; ok {
+				parent = val.(string)
+			}
+		}
+	}
+	fmt.Println("GOT GETPK PARENT 1 - TST", parent, " and elementType is :", elementType)
+
+	if parent == "" {
+		parent = os.Getenv("SITE")
+	}
+
+
+	fmt.Println("HANDLE GETPK HERE CC LISTING USING SK", fmt.Sprintf("%s", elementType))
+	query := &dynamodb.QueryInput{
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":pk": {
+				S: aws.String(id),
+			},
+			":sk": {
+				S: aws.String(fmt.Sprintf("%s", elementType)),
+			},
+			":ParentOrSite": {
+				S: aws.String(parent),
+			},
+			/*
+			":pk": {
+				S: aws.String(parent),
+			},
+			":sk": {
+				S: aws.String(fmt.Sprintf("active#%s#", elementType)),
+			},
+			*/
+		},
+		/*
+		ExpressionAttributeNames: map[string]*string{
+			":ppk": aws.String("ppk"),
+		},
+		*/
+		// IndexName:              aws.String("gsi-data-index"),
+		// KeyConditionExpression: aws.String("gpk = :pk and begins_with(gsk, :sk)"),
+		// IndexName:              aws.String("gsi-data-index"),
+		KeyConditionExpression: aws.String("id = :pk and begins_with(sk, :sk)"),
+		FilterExpression: aws.String("ppk = :ParentOrSite"),
+		//TODO: add FilterExpression
+		// FilterExpression: expBbuilder.Filter(),
+		// Limit: aws.Int64(limits),
+		// TODO: last settings
+		// TaskionExpression:   aws.String("id, sk, name, jsondata"),
+		// all ... for now TaskionExpression:   aws.String("SongTitle"),
+		TableName: aws.String(os.Getenv("APP_DATA_TABLE_NAME")),
+	}
+
+	fmt.Println("1a - WILL Query using : id:", id, " and sk of :", fmt.Sprintf("%s", elementType), " with parent of :", parent, "without gsi")
+	var lastK map[string]interface{}
+	if input.NextToken != "" {
+		decoded, err := base64.StdEncoding.DecodeString(input.NextToken)
+		if err != nil {
+			// fmt.Println("[ERROR] - Cannot decrypt start Key")
+			return nil, err
+		}
+		// fmt.Println("Decoded to :", string(decoded))
+
+		errT := json.Unmarshal(decoded, &lastK)
+		if errT != nil {
+			fmt.Println("[ERROR] - DynamoDB decode error:", errT)
+			return nil, errT
+		}
+		newStartKey, errTF := dynamodbattribute.MarshalMap(lastK)
+		if errTF != nil {
+			fmt.Println("[ERROR] - DynamoDB Get EVAL START KEY", errTF)
+			return nil, errTF
+		}
+
+		query.ExclusiveStartKey = newStartKey
+	}
+
+	out, err := acenteralib.DynamoDB.Query(query)
+	output := PaginatedGeneric{}
+	items := make([]*map[string]interface{}, 0)
+	if err == nil && *out.Count >= 1 {
+		err = dynamodbattribute.UnmarshalListOfMaps(out.Items, &items)
+	}
+	output.Items = items
+	lastEvaluatedKey := ""
+	if out.LastEvaluatedKey != nil {
+		//map[string]*dynamodb.AttributeValue
+		var lastKey map[string]interface{}
+		err = dynamodbattribute.UnmarshalMap(out.LastEvaluatedKey, &lastKey) // , lastKey)
+		jsonString, _ := json.Marshal(lastKey)
+		jsonStringBase64 := base64.StdEncoding.EncodeToString([]byte(jsonString))
+		lastEvaluatedKey = jsonStringBase64
+	}
+	output.NextToken = lastEvaluatedKey
+
+	return &output, err
+}
+
+
+
+func (p GenericHandler) handleListWithFilter(admin bool, reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*PaginatedGeneric, error) {
+
+	fmt.Println("HANDLE LISTWITHFILTER HERE A")
 	elementType := p.ElementType
 	if elementType == "" {
 		elementType = input.Type
@@ -404,6 +621,7 @@ func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject
 		fmt.Println(reqObj.User.Roles)
 	}
 
+	fmt.Println("HANDLE LISTWITHFILTER HERE B")
 	limits := int64(20)
 	if input.Limit >= 1 && input.Limit <= 100 {
 		limits = int64(input.Limit)
@@ -417,6 +635,183 @@ func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject
 		parent = val.(string)
 	}
 
+	fmt.Println("HANDLE LISTWITHFILTER  HERE C")
+	fmt.Println("GOT LISTWITHFILTER PARENT TST", parent)
+	if parent == "" {
+		fmt.Println("GOT MODEL ", p.Models.Parent)
+		if p.Models.Parent != "" {
+			fmt.Println("test if input as it .. in ", input.Input)
+			if val, ok := input.Input[p.Models.Parent]; ok {
+				parent = val.(string)
+			}
+		}
+	}
+	fmt.Println("GOT LISTWITHFILTER PARENT 1 - TST", parent, " and elementType is :", elementType)
+
+	if parent == "" {
+		parent = os.Getenv("SITE")
+	}
+
+
+	// ???
+	proj := expression.ProjectionBuilder{} // NamesList() //expression.Name("aName"), expression.Name("anotherName"), expression.Name("oneOtherName"))
+	filterExp := expression.ConditionBuilder{}
+	// hasFilterExp := 0
+
+	cond1 := expression.Key("gpk").Equal(expression.Value(parent)) // useless but requried to extract filter
+	fmt.Println("QUERY KEY of GPK:", parent, " and GSK:", fmt.Sprintf("active#%s#", elementType))
+	cond2 := expression.Key("gsk").BeginsWith(fmt.Sprintf("active#%s#", elementType)) // useless but requried to extract filter
+
+	keyCondition := expression.KeyAnd(cond1, cond2)
+
+
+	bbb := expression.NewBuilder().WithKeyCondition(keyCondition) // .WithKeyCondition(cond1)// .WithProjection(proj).WithFilter(filterExp).Build()
+
+	for k, v := range input.Input {
+		//do something here
+		lowerrKey := strings.ToLower(k)
+		fmt.Println("ADDING K OF ", lowerrKey)
+		// Key cannot be part of the Update Statement
+		if lowerrKey == "id" || lowerrKey == "sk" {
+		} else {
+			// hasFilterExp = 1
+			nameLower := expression.Name(lowerrKey)
+			value := expression.Value(v)
+
+			expTmp := nameLower.Equal(value)
+			proj = expression.AddNames(proj, nameLower)
+
+			fmt.Println("FILTER OF :", lowerrKey , " =", v)
+
+			bbb.WithFilter(expTmp)// .WithProjection(proj).WithFilter(filterExp).Build()
+			// filterExp = filterExp.Set(nameLower, value)
+			filterExp = filterExp.And(expTmp) //
+			fmt.Println("AFILTER EXP IS NOW:", filterExp)
+			// expression.Name("Name").Equal(expression.Value("Generic Name")), expression.Name("Age").LessThan(expression.Value(40)))
+		}
+	}
+	// cond2 := expression.Name("bar").Equal(expression.Value(6))
+	// expr, err := expression.NewBuilder().
+	expBbuilder, ef := bbb.WithProjection(proj).Build()
+
+	// expBbuilder, ef := expression.NewBuilder().WithCondition(cond1).WithProjection(proj).WithFilter(filterExp).Build()
+
+	fmt.Println("a EF is :", expBbuilder, ef)
+	fmt.Println("ff HANDLE LISTWITHFILTER HERE PK IS:", parent, "filter is:", expBbuilder.Filter())
+
+
+
+	fmt.Println("ff HANDLE LISTWITHFILTER HERE PK IS:", parent)
+	fmt.Println("HANDLE LISTWITHFILTER HERE CC LISTING USING SK", fmt.Sprintf("active#%s#", elementType))
+	query := &dynamodb.QueryInput{
+		/*
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":pk": {
+				S: aws.String(parent),
+			},
+			":sk": {
+				S: aws.String(fmt.Sprintf("active#%s#", elementType)),
+			},
+		},
+		*/
+		IndexName:              aws.String("gsi-data-index"),
+		KeyConditionExpression:    expBbuilder.KeyCondition(),
+		// KeyConditionExpression: aws.String("gpk = :pk and begins_with(gsk, :sk)"),
+		ExpressionAttributeNames:  expBbuilder.Names(),
+		ExpressionAttributeValues: expBbuilder.Values(),
+		FilterExpression: expBbuilder.Filter(), // aws.String("title = :title"),
+		Limit: aws.Int64(limits),
+		// TODO: last settings
+		// TaskionExpression:   aws.String("id, sk, name, jsondata"),
+		// all ... for now TaskionExpression:   aws.String("SongTitle"),
+		TableName: aws.String(os.Getenv("APP_DATA_TABLE_NAME")),
+	}
+	fmt.Println("1b - WILL Query using :", parent, " and active#", elementType, "# using gsi-data-index")
+	var lastK map[string]interface{}
+	if input.NextToken != "" {
+		decoded, err := base64.StdEncoding.DecodeString(input.NextToken)
+		if err != nil {
+			// fmt.Println("[ERROR] - Cannot decrypt start Key")
+			return nil, err
+		}
+		// fmt.Println("Decoded to :", string(decoded))
+
+		errT := json.Unmarshal(decoded, &lastK)
+		if errT != nil {
+			fmt.Println("[ERROR] - DynamoDB decode error:", errT)
+			return nil, errT
+		}
+		newStartKey, errTF := dynamodbattribute.MarshalMap(lastK)
+		if errTF != nil {
+			fmt.Println("[ERROR] - DynamoDB Get EVAL START KEY", errTF)
+			return nil, errTF
+		}
+
+		query.ExclusiveStartKey = newStartKey
+	}
+
+	out, err := acenteralib.DynamoDB.Query(query)
+	output := PaginatedGeneric{}
+	items := make([]*map[string]interface{}, 0)
+	if err == nil && *out.Count >= 1 {
+		err = dynamodbattribute.UnmarshalListOfMaps(out.Items, &items)
+	}
+	output.Items = items
+	lastEvaluatedKey := ""
+	if out.LastEvaluatedKey != nil {
+		//map[string]*dynamodb.AttributeValue
+		var lastKey map[string]interface{}
+		err = dynamodbattribute.UnmarshalMap(out.LastEvaluatedKey, &lastKey) // , lastKey)
+		jsonString, _ := json.Marshal(lastKey)
+		jsonStringBase64 := base64.StdEncoding.EncodeToString([]byte(jsonString))
+		lastEvaluatedKey = jsonStringBase64
+	}
+	output.NextToken = lastEvaluatedKey
+
+	return &output, err
+}
+
+
+
+
+
+
+func (p GenericHandler) HandleListAdmin(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*PaginatedGeneric, error) {
+	return p.handleList(false, reqObj, identity, input)
+}
+func (p GenericHandler) HandleList(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*PaginatedGeneric, error) {
+	return p.handleList(false, reqObj, identity, input)
+}
+
+
+func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*PaginatedGeneric, error) {
+
+	fmt.Println("HANDLE LIST HERE A")
+	elementType := p.ElementType
+	if elementType == "" {
+		elementType = input.Type
+	}
+
+	// TODO: Add Security using the reqObj.User / Roles ... or the reqObj.Session
+	if reqObj.User != nil {
+		fmt.Println(reqObj.User.Username)
+		fmt.Println(reqObj.User.Roles)
+	}
+
+	fmt.Println("HANDLE LIST HERE B")
+	limits := int64(20)
+	if input.Limit >= 1 && input.Limit <= 100 {
+		limits = int64(input.Limit)
+	}
+	// no need : site := os.Getenv("SITE")
+
+	// TODO: Get this from end-user session?
+	parent := ""
+	if val, ok := input.Input["parent"]; ok {
+		//do something here
+		parent = val.(string)
+	}
+	fmt.Println("HANDLE LIST HERE C")
 	fmt.Println("GOT PARENT TST", parent)
 	if parent == "" {
 		fmt.Println("GOT MODEL ", p.Models.Parent)
@@ -433,7 +828,59 @@ func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject
 		parent = os.Getenv("SITE")
 	}
 
+
+	// ???
+	proj := expression.ProjectionBuilder{} // NamesList() //expression.Name("aName"), expression.Name("anotherName"), expression.Name("oneOtherName"))
+	filterExp := expression.ConditionBuilder{}
+	// hasFilterExp := 0
+
+	cond1 := expression.Key("gpk").Equal(expression.Value(parent)) // useless but requried to extract filter
+	fmt.Println("QUERY KEY of GPK:", parent, " and GSK:", fmt.Sprintf("active#%s#", elementType))
+	cond2 := expression.Key("gsk").BeginsWith(fmt.Sprintf("active#%s#", elementType)) // useless but requried to extract filter
+
+	proj = expression.AddNames(proj, expression.Name("gpk"))
+	proj = expression.AddNames(proj, expression.Name("gsk"))
+
+	keyCondition := expression.KeyAnd(cond1, cond2)
+
+	bbb := expression.NewBuilder() // .WithKeyCondition(cond1)// .WithProjection(proj).WithFilter(filterExp).Build()
+
+	for k, v := range input.Input {
+		//do something here
+		lowerrKey := strings.ToLower(k)
+		fmt.Println("ADDING K OF ", lowerrKey)
+		// Key cannot be part of the Update Statement
+		if lowerrKey == "id" || lowerrKey == "sk" {
+		} else {
+			// hasFilterExp = 1
+			nameLower := expression.Name(lowerrKey)
+			value := expression.Value(v)
+
+			expTmp := nameLower.Equal(value)
+			proj = expression.AddNames(proj, nameLower)
+
+			fmt.Println("FILTER OF :", lowerrKey , " =", v)
+
+			bbb.WithFilter(expTmp)// .WithProjection(proj).WithFilter(filterExp).Build()
+			// filterExp = filterExp.Set(nameLower, value)
+			filterExp = filterExp.And(expTmp) //
+			fmt.Println("AFILTER EXP IS NOW:", filterExp)
+			// expression.Name("Name").Equal(expression.Value("Generic Name")), expression.Name("Age").LessThan(expression.Value(40)))
+		}
+	}
+	// cond2 := expression.Name("bar").Equal(expression.Value(6))
+	// expr, err := expression.NewBuilder().
+	expBbuilder, ef := bbb.WithKeyCondition(keyCondition).WithProjection(proj).Build()
+
+	// expBbuilder, ef := expression.NewBuilder().WithCondition(cond1).WithProjection(proj).WithFilter(filterExp).Build()
+
+	fmt.Println("a EF is :", expBbuilder, ef)
+	fmt.Println("ff HANDLE LISTWITHFILTER HERE PK IS:", parent, "filter is:", expBbuilder.Filter())
+
+	fmt.Println("HANDLE LIST HERE PK IS:", parent)
+	fmt.Println("ffa HANDLE LIST HERE CC LISTING USING SK", fmt.Sprintf("active#%s#", elementType), expBbuilder.KeyCondition())
 	query := &dynamodb.QueryInput{
+		/*
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":pk": {
 				S: aws.String(parent),
@@ -442,16 +889,25 @@ func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject
 				S: aws.String(fmt.Sprintf("active#%s#", elementType)),
 			},
 		},
-		IndexName:              aws.String("gsi-data-index"),
-		KeyConditionExpression: aws.String("gpk = :pk and begins_with(gsk, :sk)"),
+		*/
+		// IndexName:              aws.String("gsi-data-index"),
+		// KeyConditionExpression: aws.String("gpk = :pk and begins_with(gsk, :sk)"),
 		// FilterExpression: aws.String("title = :title"),
+
+		IndexName:                 aws.String("gsi-data-index"),
+		KeyConditionExpression:    expBbuilder.KeyCondition(),
+		// KeyConditionExpression: aws.String("gpk = :pk and begins_with(gsk, :sk)"),
+		ExpressionAttributeNames:  expBbuilder.Names(),
+		ExpressionAttributeValues: expBbuilder.Values(),
+		FilterExpression: expBbuilder.Filter(), // aws.String("title = :title"),
+
 		Limit: aws.Int64(limits),
 		// TODO: last settings
 		// TaskionExpression:   aws.String("id, sk, name, jsondata"),
 		// all ... for now TaskionExpression:   aws.String("SongTitle"),
 		TableName: aws.String(os.Getenv("APP_DATA_TABLE_NAME")),
 	}
-	fmt.Println("1 - WILL Query using :", parent, " and active#", elementType, "# using gsi-data-index")
+	fmt.Println("1c - WILL Query using :", parent, " and active#", elementType, "# using gsi-data-index")
 	var lastK map[string]interface{}
 	if input.NextToken != "" {
 		decoded, err := base64.StdEncoding.DecodeString(input.NextToken)
@@ -628,7 +1084,15 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	fmt.Println("OK GOT SEESION OF")
 	fmt.Println(reqObj.Session)
 	fmt.Println("================")
-	mutation.Input["upk"] = reqObj.Session.Userid
+	if (reqObj.Session.Userid == "") {
+		mutation.Input["upk"] = reqObj.Session.Userid
+	} else {
+		if (reqObj.Session.Userid == "admin-api") {
+			fmt.Println("WE ARE IN API MODE..., will ignore UPK")
+		} else {
+			fmt.Println("NOT IN API? userid is :", reqObj.Session.Userid)
+		}
+	}
 
 
 	// childSK := dynamoPutInput.Item["sk"].S
@@ -740,7 +1204,7 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 
 			if isFieldOk {
 				nameLower := expression.Name(lowerNameKey)
-				fmt.Println("22 - Adding of ", nameLower)
+				fmt.Println("22 - Adding of ", nameLower, "value is :", v)
 				value := expression.Value(v)
 				attrB, _ := dynamodbattribute.Marshal(v)
 				attributes[lowerNameKey] = attrB
@@ -881,6 +1345,19 @@ func (p GenericHandler) InitializeRoutes(r resolvers.Repository) error {
 				fmt.Println("GraphQL Adding :", fmt.Sprintf("query.%s", strings.ToLower(p.ActionWordPlurial)))
 				err = r.Add(fmt.Sprintf("query.%s", strings.ToLower(p.ActionWordPlurial)), p.HandleList) // query.posts(listInput)
 
+				fmt.Println("GraphQL Adding :", fmt.Sprintf("query.get%s", p.ActionWordPlurial))
+				err = r.Add(fmt.Sprintf("query.get%s", p.ActionWordPlurial), p.HandleGet) // query.posts(listInput)
+				fmt.Println(err)
+
+				fmt.Println("GraphQL Adding :", fmt.Sprintf("query.get%s", p.ActionWordSingular))
+				err = r.Add(fmt.Sprintf("query.get%s", p.ActionWordSingular), p.HandleGet) // query.posts(listInput)
+
+				fmt.Println("GraphQL Adding :", fmt.Sprintf("query.Get%s", p.ActionWordPlurial))
+				err = r.Add(fmt.Sprintf("query.get%s", p.ActionWordPlurial), p.HandleGet) // query.posts(listInput)
+
+				fmt.Println("GraphQL Adding :", fmt.Sprintf("query.Get%s", p.ActionWordSingular))
+				err = r.Add(fmt.Sprintf("query.get%s", p.ActionWordSingular), p.HandleGet) // query.posts(listInput)
+
 				// err = r.Add(fmt.Sprintf("query.batchget%s", p.ActionWordPlurial), p.HandleBatchGet)
 				// err = r.Add(fmt.Sprintf("query.%s", strings.ToLower(p.ActionWordSingular)), p.HandleGetGeneric)			 // query.post(id=x)
 
@@ -898,12 +1375,90 @@ func (p GenericHandler) InitializeRoutes(r resolvers.Repository) error {
 				}
 
 				fmt.Println("DID WE GOT RESEOLVERS?", p.Models.Resolvers)
-				for v, k := range p.Models.Resolvers {
-					fmt.Println("Adding custom resolvers : ", fmt.Sprintf("mutation.%s", v), " for :", k.(string))
+				for tmpV, k := range p.Models.Resolvers {
+					v := strings.ReplaceAll(tmpV, "_", ".")
 					if k.(string) == "create" {
+						fmt.Println("Adding custom resolvers : ", fmt.Sprintf("mutation.%s", v), " for :", k.(string))
 						fmt.Println("Added custom resolvers : ", fmt.Sprintf("mutation.%s", v), " for : creaete generic")
 						err = r.Add(fmt.Sprintf("mutation.%s", v), p.HandleCreateGeneric)
 						fmt.Println("ERR IS :", err)
+					} else {
+						fmt.Println("z1 - Adding custom resolvers : ", fmt.Sprintf("%s", v), " for :", k.(string))
+						if val, ok := Func_Map[fmt.Sprintf("%s", v)]; ok {
+							//do something here
+							fmt.Println("Added custom resolver HERE RESOLVER name is :", fmt.Sprintf("%s", v), " VAL is :", val)
+
+							// fmt.Println("ADDING OF VAL OF :", val())
+							// if v1, ok1 := Func_Iface[fmt.Sprintf("%s", v)]; ok1 {
+								v1 := k.(string)
+								fmt.Println("TEST V1:", v1)
+								// miType := val
+								s := val.MethodByName(v1)
+								fmt.Println("VAL IS:", val, " v1 is :", v1)
+								fmt.Println("S IS :", s)
+								if !s.IsValid(){
+									fmt.Println("not correct")
+								}
+
+								vp := reflect.New(reflect.TypeOf(s.Type()))
+								vpTmp := vp.Interface()
+								fmt.Println("Sa1 IS tttt:", s.Type())
+								fmt.Println("Sa1 IS :", vp)
+								fmt.Println("Sa2 IS :", vpTmp)
+								fmt.Println("Sa3 IS :", s.Call)
+								x := reflect.TypeOf(s.Call)
+								fmt.Println("Sa3a2 S :", s.Type().NumIn())
+								fmt.Println("X IS :", x)
+								err = r.AddFct(fmt.Sprintf("%s", v), s) // .(func())(args[0].(string)) // Func_Map[fmt.Sprintf("%s", v)])
+								fmt.Println("GOT ERROR TMP:", err)
+								/*
+								for i := 0; i < miType.NumMethod(); i++ {
+									method := miType.Method(i)
+									fmt.Println("METHOD NAME IS:" , method.Name)
+									if (method.Name == v1) {
+										fmt.Println("OK DONE: Added custom resolver HERE RESOLVER name is :", fmt.Sprintf("%s", v), " VAL is :", val)
+
+										// in := make([]reflect.Value, method.Type.NumIn())
+
+										fmt.Println("TEST", method.Func)
+										fmt.Println("TEST CALL:", method.Func.Call)
+										fmt.Println("TEST METHOD", method)
+										err = r.Add(fmt.Sprintf("%s", v), method) // .(func())(args[0].(string)) // Func_Map[fmt.Sprintf("%s", v)])
+										fmt.Println("GOT ERROR TMP:", err)
+
+										// valueOf := reflect.ValueOf(val)
+										intPtr := reflect.New(val) // reflect.TypeOf(val))
+										b := intPtr.Elem().Interface()
+										fmt.Println(b)
+										// fmt.Println("ITS TYPE OF :", valueOf)
+
+										fmt.Println("11 GOT ERROR TMP:", b)
+										m := b.MethodByName(v1)
+										fmt.Println("M IS:", m)
+										err = r.Add(fmt.Sprintf("%s", v), m) // .(func())(args[0].(string)) // Func_Map[fmt.Sprintf("%s", v)])
+										fmt.Println("11a  GOT ERROR TMP:", err)
+
+										// in := make([]reflect.Value, method.Type.NumIn())
+										// in[0] = reflect.ValueOf(CustomResolvers{})
+										// fmt.Println("Params in:", method.Type.NumIn(), "Params out:", method.Type.NumOut())
+										// mi := method.Func.Call(in)
+										// fmt.Println("mi:", mi)
+										fmt.Println("METHOD IS :", method)
+
+										fmt.Println("")
+										break
+									}
+								}
+								*/
+								/*valueOf := reflect.ValueOf(v1)
+								fmt.Println("ITS TYPE OF :", valueOf.Type().Name())
+								*/
+								// err = r.Add(fmt.Sprintf("%s", v), val.(valueOf.Type()))
+								// err = r.Add(fmt.Sprintf("%s", v), val.(func(*acenteralib.RequestObject, map[string]interface{}, valueOf.Type()) (*map[string]interface{}, error)))
+								// err = r.Add(fmt.Sprintf("%s", v), val) // .(func())(args[0].(string)) // Func_Map[fmt.Sprintf("%s", v)])
+								// fmt.Println("GOT ERROR TMP:", err)
+							// }
+						}
 					}
 				}
 			}

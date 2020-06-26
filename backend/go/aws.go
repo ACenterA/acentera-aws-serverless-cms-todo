@@ -77,6 +77,9 @@ type User struct {
 	PasswordResetJWT string   `json:"password_reset"`
 	Sub              string   `json:"sub"`
 	Aud              string   `json:"aud"`
+	ExtId			 string   `json:"extid"`
+	Extra			 map[string]string `json:"extras"`
+	// Apikey           string   `json:"apikey"` ??
 	// UserObject 				CognitoUser `json:"-"` // Used for password reset
 }
 
@@ -156,11 +159,13 @@ type COGNITOIDENTITYAPI interface {
 	AdminCreateUser(input *cognitoidentityprovider.AdminCreateUserInput) (*cognitoidentityprovider.AdminCreateUserOutput, error)
 	AdminAddUserToGroupWithContext(ctx aws.Context, input *cognitoidentityprovider.AdminAddUserToGroupInput, opts ...request.Option) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
 	AdminAddUserToGroup(input *cognitoidentityprovider.AdminAddUserToGroupInput) (*cognitoidentityprovider.AdminAddUserToGroupOutput, error)
+	AdminUpdateUserAttributes(input *cognitoidentityprovider.AdminUpdateUserAttributesInput) (*cognitoidentityprovider.AdminUpdateUserAttributesOutput, error)
 	GetUserWithContext(ctx aws.Context, input *cognitoidentityprovider.GetUserInput, opts ...request.Option) (*cognitoidentityprovider.GetUserOutput, error)
 	GetUser(input *cognitoidentityprovider.GetUserInput) (*cognitoidentityprovider.GetUserOutput, error)
 	AdminGetUserWithContext(ctx aws.Context, input *cognitoidentityprovider.AdminGetUserInput, opts ...request.Option) (*cognitoidentityprovider.AdminGetUserOutput, error)
 	AdminGetUser(input *cognitoidentityprovider.AdminGetUserInput) (*cognitoidentityprovider.AdminGetUserOutput, error)
 	AdminInitiateAuthRequest(input *cognitoidentityprovider.AdminInitiateAuthInput) (req *request.Request, output *cognitoidentityprovider.AdminInitiateAuthOutput)
+	ListUsers(input *cognitoidentityprovider.ListUsersInput) (*cognitoidentityprovider.ListUsersOutput, error)
 	InitiateAuthWithContext(ctx aws.Context, input *cognitoidentityprovider.InitiateAuthInput, opts ...request.Option) (*cognitoidentityprovider.InitiateAuthOutput, error)
 	InitiateAuth(input *cognitoidentityprovider.InitiateAuthInput) (*cognitoidentityprovider.InitiateAuthOutput, error)
 	AssociateSoftwareTokenWithContext(ctx aws.Context, input *cognitoidentityprovider.AssociateSoftwareTokenInput, opts ...request.Option) (*cognitoidentityprovider.AssociateSoftwareTokenOutput, error)

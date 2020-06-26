@@ -29,6 +29,7 @@ var UUIDGen = func() uuid.UUID {
 var r = resolvers.New()
 
 func init() {
+	fmt.Println("INIT IN HERE MAIN")
 	// load modulez
 	// 1. open the so file to load the symbols
 	plug, err := plugin.Open("aws.so")
