@@ -3,6 +3,8 @@ interface BaseObject {
   id: ID!
   title: String!
   status: String
+  image: String
+  thumbnail: String
   created: AWSDateTime
   updated: AWSDateTime
 }
@@ -23,4 +25,3 @@ enum LangEnum {
     fr
     en
 }
-

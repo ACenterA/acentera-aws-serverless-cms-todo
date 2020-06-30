@@ -53,6 +53,7 @@ type SharedResolvers interface {
 */
 type CustomResolverFCT func(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input interface{}) (*map[string]interface{}, error)
 type CustomResolverFCTResp func(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input interface{}) (*map[string]interface{}, error)
+
 // NotifyAPIGateway wraps a handler func and sends an SNS notification on error
 /*
 func NotifyAPIGateway(h CustomResolverFCT) HandlerAPIGateway {
@@ -69,13 +70,13 @@ func NotifyAPIGateway(h CustomResolverFCT) HandlerAPIGateway {
 var (
 	SELF         = "SELF"
 	CustomModels = make(map[string]Models, 0)
-	Func_Names   =  make([]string, 0)
-	Func_Iface   =  make(map[string]string, 0)
+	Func_Names   = make([]string, 0)
+	Func_Iface   = make(map[string]string, 0)
 	// Func_Map     =  map[string] func(*acenteralib.RequestObject, map[string]interface {}, interface {}) CustomResolverFCT {
 	// Func_Map     =  map[string] func() CustomResolverFCT {
-	Func_Map     =  map[string] reflect.Value { // *interface{} { map[string] reflect.Type { // *interface{} {
-	// Func_Map     =  map[string]CustomResolverFCT {
-	// Func_Map     =  map[string]func(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input interface{}) (*map[string]interface{}, error) {
+	Func_Map = map[string]reflect.Value{ // *interface{} { map[string] reflect.Type { // *interface{} {
+		// Func_Map     =  map[string]CustomResolverFCT {
+		// Func_Map     =  map[string]func(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input interface{}) (*map[string]interface{}, error) {
 		// "test": test,
 	}
 )
@@ -108,8 +109,8 @@ func (c *conf) getConf() *conf {
 
 	yamlFile, err := ioutil.ReadFile("conf.yaml")
 	if err != nil {
-	        yamlFile, err = ioutil.ReadFile("./handlers/app/conf.yaml")
-	        if err != nil {
+		yamlFile, err = ioutil.ReadFile("./handlers/app/conf.yaml")
+		if err != nil {
 			log.Printf("yamlFile.Get err   #%v ", err)
 		}
 	}
@@ -122,6 +123,8 @@ func (c *conf) getConf() *conf {
 }
 
 func init() {
+	miType := reflect.ValueOf(GenericHandler{})
+	Func_Map["generic"] = miType // query.myPluginTestFct"] = miType
 }
 
 func (p GenericHandler) Initialize(r resolvers.Repository) error {
@@ -434,7 +437,7 @@ func (p GenericHandler) HandleGet(reqObj *acenteralib.RequestObject, identity ma
 		id = val.(string)
 	}
 
-	if (id != "") {
+	if id != "" {
 		// OK WE GOT AN ID...
 		elementType := p.ElementType
 		if elementType == "" {
@@ -442,10 +445,10 @@ func (p GenericHandler) HandleGet(reqObj *acenteralib.RequestObject, identity ma
 		}
 
 		respQ, err := p.handleGetByIdAndPk(false, reqObj, identity, input, id, elementType)
-		if (respQ == nil) {
+		if respQ == nil {
 			return nil, err
 		}
-		if (respQ.Items == nil) {
+		if respQ.Items == nil {
 			// Not Found
 			return nil, err
 		}
@@ -459,12 +462,12 @@ func (p GenericHandler) HandleGet(reqObj *acenteralib.RequestObject, identity ma
 		return respQ.Items[0], err
 	}
 	/*
-	lstInput := ListPaginatedGenericInput{
-		Input: input,
-	}
+		lstInput := ListPaginatedGenericInput{
+			Input: input,
+		}
 	*/
 	respQ, err := p.handleListWithFilter(false, reqObj, identity, input)
-	if (err != nil) {
+	if err != nil {
 		return nil, err
 	}
 	if len(respQ.Items) <= 0 {
@@ -477,15 +480,14 @@ func (p GenericHandler) HandleGet(reqObj *acenteralib.RequestObject, identity ma
 	return respQ.Items[0], nil
 }
 
-
 func (p GenericHandler) handleGetByIdAndPk(admin bool, reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput, id string, sk string) (*PaginatedGeneric, error) {
 
 	fmt.Println("HANDLE handleGetByIdAndPk HERE A")
 	/*
-	elementType := p.ElementType
-	if elementType == "" {
-		elementType = input.Type
-	}
+		elementType := p.ElementType
+		if elementType == "" {
+			elementType = input.Type
+		}
 	*/
 	elementType := sk
 
@@ -505,9 +507,9 @@ func (p GenericHandler) handleGetByIdAndPk(admin bool, reqObj *acenteralib.Reque
 	fmt.Println("HANDLE GETPK  HERE C")
 	fmt.Println("GOT GETPK PARENT TST", parent)
 	if parent == "" {
-		fmt.Println("GOT MODEL ", p.Models.Parent)
+		fmt.Println("2c - GOT MODEL ", p.Models.Parent)
 		if p.Models.Parent != "" {
-			fmt.Println("test if input as it .. in ", input.Input)
+			fmt.Println("1 - test if input as it .. in ", input.Input)
 			if val, ok := input.Input[p.Models.Parent]; ok {
 				parent = val.(string)
 			}
@@ -518,7 +520,6 @@ func (p GenericHandler) handleGetByIdAndPk(admin bool, reqObj *acenteralib.Reque
 	if parent == "" {
 		parent = os.Getenv("SITE")
 	}
-
 
 	fmt.Println("HANDLE GETPK HERE CC LISTING USING SK", fmt.Sprintf("%s", elementType))
 	query := &dynamodb.QueryInput{
@@ -533,24 +534,24 @@ func (p GenericHandler) handleGetByIdAndPk(admin bool, reqObj *acenteralib.Reque
 				S: aws.String(parent),
 			},
 			/*
-			":pk": {
-				S: aws.String(parent),
-			},
-			":sk": {
-				S: aws.String(fmt.Sprintf("active#%s#", elementType)),
-			},
+				":pk": {
+					S: aws.String(parent),
+				},
+				":sk": {
+					S: aws.String(fmt.Sprintf("active#%s#", elementType)),
+				},
 			*/
 		},
 		/*
-		ExpressionAttributeNames: map[string]*string{
-			":ppk": aws.String("ppk"),
-		},
+			ExpressionAttributeNames: map[string]*string{
+				":ppk": aws.String("ppk"),
+			},
 		*/
 		// IndexName:              aws.String("gsi-data-index"),
 		// KeyConditionExpression: aws.String("gpk = :pk and begins_with(gsk, :sk)"),
 		// IndexName:              aws.String("gsi-data-index"),
 		KeyConditionExpression: aws.String("id = :pk and begins_with(sk, :sk)"),
-		FilterExpression: aws.String("ppk = :ParentOrSite"),
+		FilterExpression:       aws.String("ppk = :ParentOrSite"),
 		//TODO: add FilterExpression
 		// FilterExpression: expBbuilder.Filter(),
 		// Limit: aws.Int64(limits),
@@ -605,7 +606,16 @@ func (p GenericHandler) handleGetByIdAndPk(admin bool, reqObj *acenteralib.Reque
 	return &output, err
 }
 
-
+func (p GenericHandler) HandleListWithFilter(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*PaginatedGeneric, error) {
+	fmt.Println("HANDLE LIST WITH FILTER SESSION IS:", reqObj.Session)
+	if reqObj.Session.Userid == "admin-api" {
+		fmt.Println("HANDLE LIST WITH FILTER FOR API ADMIN")
+		return p.handleListWithFilter(true, reqObj, identity, input)
+	} else {
+		fmt.Println("HANDLE LIST WITH FILTER FOR API USER")
+		return p.handleListWithFilter(false, reqObj, identity, input)
+	}
+}
 
 func (p GenericHandler) handleListWithFilter(admin bool, reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*PaginatedGeneric, error) {
 
@@ -620,6 +630,14 @@ func (p GenericHandler) handleListWithFilter(admin bool, reqObj *acenteralib.Req
 		fmt.Println(reqObj.User.Username)
 		fmt.Println(reqObj.User.Roles)
 	}
+
+	fmt.Println("ADMIN IS HERE:", admin)
+	/*
+		HANDLE LISTWITHFILTER HERE A
+		francis.lavalliere+cog10@gmail.com
+		[OrgAdmin RestaurantAdmin]
+		HANDLE LISTWITHFILTER HERE B
+	*/
 
 	fmt.Println("HANDLE LISTWITHFILTER HERE B")
 	limits := int64(20)
@@ -636,12 +654,14 @@ func (p GenericHandler) handleListWithFilter(admin bool, reqObj *acenteralib.Req
 	}
 
 	fmt.Println("HANDLE LISTWITHFILTER  HERE C")
+	parentModel := ""
 	fmt.Println("GOT LISTWITHFILTER PARENT TST", parent)
 	if parent == "" {
-		fmt.Println("GOT MODEL ", p.Models.Parent)
+		fmt.Println("2a- GOT MODEL ", p.Models.Parent)
 		if p.Models.Parent != "" {
-			fmt.Println("test if input as it .. in ", input.Input)
+			fmt.Println("2 - test if input as it .. in ", input.Input)
 			if val, ok := input.Input[p.Models.Parent]; ok {
+				parentModel = p.Models.Parent
 				parent = val.(string)
 			}
 		}
@@ -652,7 +672,6 @@ func (p GenericHandler) handleListWithFilter(admin bool, reqObj *acenteralib.Req
 		parent = os.Getenv("SITE")
 	}
 
-
 	// ???
 	proj := expression.ProjectionBuilder{} // NamesList() //expression.Name("aName"), expression.Name("anotherName"), expression.Name("oneOtherName"))
 	filterExp := expression.ConditionBuilder{}
@@ -661,9 +680,11 @@ func (p GenericHandler) handleListWithFilter(admin bool, reqObj *acenteralib.Req
 	cond1 := expression.Key("gpk").Equal(expression.Value(parent)) // useless but requried to extract filter
 	fmt.Println("QUERY KEY of GPK:", parent, " and GSK:", fmt.Sprintf("active#%s#", elementType))
 	cond2 := expression.Key("gsk").BeginsWith(fmt.Sprintf("active#%s#", elementType)) // useless but requried to extract filter
-
+	TmpnameLower := expression.Name("gpk")
+	proj = expression.AddNames(proj, TmpnameLower)
+	TmpnameLower = expression.Name("gsk")
+	proj = expression.AddNames(proj, TmpnameLower)
 	keyCondition := expression.KeyAnd(cond1, cond2)
-
 
 	bbb := expression.NewBuilder().WithKeyCondition(keyCondition) // .WithKeyCondition(cond1)// .WithProjection(proj).WithFilter(filterExp).Build()
 
@@ -674,20 +695,24 @@ func (p GenericHandler) handleListWithFilter(admin bool, reqObj *acenteralib.Req
 		// Key cannot be part of the Update Statement
 		if lowerrKey == "id" || lowerrKey == "sk" {
 		} else {
-			// hasFilterExp = 1
-			nameLower := expression.Name(lowerrKey)
-			value := expression.Value(v)
+			if strings.ToLower(parentModel) == lowerrKey {
+				fmt.Println("33 IGNORING FILTER.....")
+			} else {
 
-			expTmp := nameLower.Equal(value)
-			proj = expression.AddNames(proj, nameLower)
+				// hasFilterExp = 1
+				nameLower := expression.Name(lowerrKey)
+				value := expression.Value(v)
 
-			fmt.Println("FILTER OF :", lowerrKey , " =", v)
+				expTmp := nameLower.Equal(value)
+				proj = expression.AddNames(proj, nameLower)
 
-			bbb.WithFilter(expTmp)// .WithProjection(proj).WithFilter(filterExp).Build()
-			// filterExp = filterExp.Set(nameLower, value)
-			filterExp = filterExp.And(expTmp) //
-			fmt.Println("AFILTER EXP IS NOW:", filterExp)
-			// expression.Name("Name").Equal(expression.Value("Generic Name")), expression.Name("Age").LessThan(expression.Value(40)))
+				fmt.Println("zz = FILTER OF :", lowerrKey, " and parent is :", strings.ToLower(parentModel))
+				bbb.WithFilter(expTmp) // .WithProjection(proj).WithFilter(filterExp).Build()
+				// filterExp = filterExp.Set(nameLower, value)
+				filterExp = filterExp.And(expTmp) //
+				fmt.Println("AFILTER EXP IS NOW:", filterExp)
+				// expression.Name("Name").Equal(expression.Value("Generic Name")), expression.Name("Age").LessThan(expression.Value(40)))
+			}
 		}
 	}
 	// cond2 := expression.Name("bar").Equal(expression.Value(6))
@@ -699,28 +724,26 @@ func (p GenericHandler) handleListWithFilter(admin bool, reqObj *acenteralib.Req
 	fmt.Println("a EF is :", expBbuilder, ef)
 	fmt.Println("ff HANDLE LISTWITHFILTER HERE PK IS:", parent, "filter is:", expBbuilder.Filter())
 
-
-
 	fmt.Println("ff HANDLE LISTWITHFILTER HERE PK IS:", parent)
 	fmt.Println("HANDLE LISTWITHFILTER HERE CC LISTING USING SK", fmt.Sprintf("active#%s#", elementType))
 	query := &dynamodb.QueryInput{
 		/*
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":pk": {
-				S: aws.String(parent),
+			ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+				":pk": {
+					S: aws.String(parent),
+				},
+				":sk": {
+					S: aws.String(fmt.Sprintf("active#%s#", elementType)),
+				},
 			},
-			":sk": {
-				S: aws.String(fmt.Sprintf("active#%s#", elementType)),
-			},
-		},
 		*/
 		IndexName:              aws.String("gsi-data-index"),
-		KeyConditionExpression:    expBbuilder.KeyCondition(),
+		KeyConditionExpression: expBbuilder.KeyCondition(),
 		// KeyConditionExpression: aws.String("gpk = :pk and begins_with(gsk, :sk)"),
 		ExpressionAttributeNames:  expBbuilder.Names(),
 		ExpressionAttributeValues: expBbuilder.Values(),
-		FilterExpression: expBbuilder.Filter(), // aws.String("title = :title"),
-		Limit: aws.Int64(limits),
+		FilterExpression:          expBbuilder.Filter(), // aws.String("title = :title"),
+		Limit:                     aws.Int64(limits),
 		// TODO: last settings
 		// TaskionExpression:   aws.String("id, sk, name, jsondata"),
 		// all ... for now TaskionExpression:   aws.String("SongTitle"),
@@ -768,13 +791,9 @@ func (p GenericHandler) handleListWithFilter(admin bool, reqObj *acenteralib.Req
 	}
 	output.NextToken = lastEvaluatedKey
 
+	fmt.Println("ADMIN IS:", admin)
 	return &output, err
 }
-
-
-
-
-
 
 func (p GenericHandler) HandleListAdmin(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*PaginatedGeneric, error) {
 	return p.handleList(false, reqObj, identity, input)
@@ -782,7 +801,6 @@ func (p GenericHandler) HandleListAdmin(reqObj *acenteralib.RequestObject, ident
 func (p GenericHandler) HandleList(reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*PaginatedGeneric, error) {
 	return p.handleList(false, reqObj, identity, input)
 }
-
 
 func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject, identity map[string]interface{}, input ListPaginatedGenericInput) (*PaginatedGeneric, error) {
 
@@ -813,12 +831,19 @@ func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject
 	}
 	fmt.Println("HANDLE LIST HERE C")
 	fmt.Println("GOT PARENT TST", parent)
+	parentModel := ""
 	if parent == "" {
-		fmt.Println("GOT MODEL ", p.Models.Parent)
+		fmt.Println("1a - GOT MODEL ", p.Models.Parent)
 		if p.Models.Parent != "" {
-			fmt.Println("test if input as it .. in ", input.Input)
+			fmt.Println("3 - test if input as it .. in ", input.Input)
 			if val, ok := input.Input[p.Models.Parent]; ok {
+				parentModel = strings.ToLower(p.Models.Parent)
 				parent = val.(string)
+			} else {
+				// GOOD OR BAD???
+				fmt.Println("USER GPK IS :", reqObj.User.Gpk)
+				parentModel = strings.ToLower(p.Models.Parent)
+				parent = reqObj.User.Gpk
 			}
 		}
 	}
@@ -827,7 +852,6 @@ func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject
 	if parent == "" {
 		parent = os.Getenv("SITE")
 	}
-
 
 	// ???
 	proj := expression.ProjectionBuilder{} // NamesList() //expression.Name("aName"), expression.Name("anotherName"), expression.Name("oneOtherName"))
@@ -853,19 +877,23 @@ func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject
 		if lowerrKey == "id" || lowerrKey == "sk" {
 		} else {
 			// hasFilterExp = 1
-			nameLower := expression.Name(lowerrKey)
-			value := expression.Value(v)
+			if strings.ToLower(parentModel) == lowerrKey {
+				fmt.Println("az IGNORING FILTER.....")
+			} else {
+				nameLower := expression.Name(lowerrKey)
+				value := expression.Value(v)
 
-			expTmp := nameLower.Equal(value)
-			proj = expression.AddNames(proj, nameLower)
+				expTmp := nameLower.Equal(value)
+				proj = expression.AddNames(proj, nameLower)
 
-			fmt.Println("FILTER OF :", lowerrKey , " =", v)
+				fmt.Println("FILTER OF :", lowerrKey, " =", v)
 
-			bbb.WithFilter(expTmp)// .WithProjection(proj).WithFilter(filterExp).Build()
-			// filterExp = filterExp.Set(nameLower, value)
-			filterExp = filterExp.And(expTmp) //
-			fmt.Println("AFILTER EXP IS NOW:", filterExp)
-			// expression.Name("Name").Equal(expression.Value("Generic Name")), expression.Name("Age").LessThan(expression.Value(40)))
+				bbb.WithFilter(expTmp) // .WithProjection(proj).WithFilter(filterExp).Build()
+				// filterExp = filterExp.Set(nameLower, value)
+				filterExp = filterExp.And(expTmp) //
+				fmt.Println("AFILTER EXP IS NOW:", filterExp)
+				// expression.Name("Name").Equal(expression.Value("Generic Name")), expression.Name("Age").LessThan(expression.Value(40)))
+			}
 		}
 	}
 	// cond2 := expression.Name("bar").Equal(expression.Value(6))
@@ -881,25 +909,25 @@ func (p GenericHandler) handleList(admin bool, reqObj *acenteralib.RequestObject
 	fmt.Println("ffa HANDLE LIST HERE CC LISTING USING SK", fmt.Sprintf("active#%s#", elementType), expBbuilder.KeyCondition())
 	query := &dynamodb.QueryInput{
 		/*
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":pk": {
-				S: aws.String(parent),
+			ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+				":pk": {
+					S: aws.String(parent),
+				},
+				":sk": {
+					S: aws.String(fmt.Sprintf("active#%s#", elementType)),
+				},
 			},
-			":sk": {
-				S: aws.String(fmt.Sprintf("active#%s#", elementType)),
-			},
-		},
 		*/
 		// IndexName:              aws.String("gsi-data-index"),
 		// KeyConditionExpression: aws.String("gpk = :pk and begins_with(gsk, :sk)"),
 		// FilterExpression: aws.String("title = :title"),
 
-		IndexName:                 aws.String("gsi-data-index"),
-		KeyConditionExpression:    expBbuilder.KeyCondition(),
+		IndexName:              aws.String("gsi-data-index"),
+		KeyConditionExpression: expBbuilder.KeyCondition(),
 		// KeyConditionExpression: aws.String("gpk = :pk and begins_with(gsk, :sk)"),
 		ExpressionAttributeNames:  expBbuilder.Names(),
 		ExpressionAttributeValues: expBbuilder.Values(),
-		FilterExpression: expBbuilder.Filter(), // aws.String("title = :title"),
+		FilterExpression:          expBbuilder.Filter(), // aws.String("title = :title"),
 
 		Limit: aws.Int64(limits),
 		// TODO: last settings
@@ -963,14 +991,18 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	if elementType == "" {
 		elementType = mutation.Type
 	}
+
+	fmt.Println("Create Generic ... (B)", elementType)
 	hasChildMutation := false // isNextMutation // false
 
 	// OneToMany ?????
 	// if we receive an existing id that means we already have the metadata created ...
 	existingID := ""
+	fmt.Println("Create Generic GOT ID?")
 	if val, ok := mutation.Input["id"]; ok {
 		existingID = val.(string)
 	}
+	fmt.Println("Create Generic GOT ID?", existingID)
 
 	// Ok, if we want an deterministic id value such as an md5 of the email address as primary key
 	// compute the fct + field value
@@ -1047,12 +1079,17 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 	taskName := mutation.Input["title"].(string)
 	site := os.Getenv("SITE")
 
+	fmt.Println("TEST OF PARENT HERE")
+
 	parent := "" // os.Getenv("SITE")
 	if mutation.Parent != nil {
+		fmt.Println("TEST OF PARENT HERE 1")
 		if val, ok := mutation.Parent["value"]; ok {
+			fmt.Println("TEST OF PARENT HERE 2 value is", val.(string))
 			parent = val.(string)
 		}
 	}
+	fmt.Println("TEST OF PARENT HERE 3")
 	var dynamoPutInput dynamodb.PutItemInput
 	// if no parents defined in request ...
 	if parent == "" {
@@ -1063,15 +1100,23 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 		}
 	}
 
+	fmt.Println("TEST OF PARENT HERE 4")
+	fmt.Println("PARENT IS :", parent)
 	if parent == "" {
+		fmt.Println("CreateAppItem Parent here 1:", parent)
+		fmt.Println("TEST OF PARENT CreateAppItemParent using", "task name:", taskName, "element ype is:", elementType, " site is :", site, "")
 		dynamoPutInput = *p.Awslambda.CreateAppItemParent(taskName, elementType, site, "") // leave default sitei and sort key of active#ELEMENTTYPE#TS
 	} else {
+		fmt.Println("CreateAppItem Parent here 2:", parent)
+		fmt.Println("TEST OF PARENT CreateAppItemParentAndPlugin using", taskName, elementType, parent, "", site, "")
 		dynamoPutInput = *p.Awslambda.CreateAppItemParentAndPlugin(taskName, elementType, parent, "", site, "") // leave default sitei and sort key of active#ElementTypetTT#TS
 	}
 
+	fmt.Println("CreateAppItem Parent HERE GOT isIdFormated?")
 	if isIdFormated {
 		dynamoPutInput.Item["id"].S = aws.String(newIDFormat)
 	}
+	fmt.Println("CreateAppItem Parent HERE GOT isIdFormated v2")
 
 	// proj represents the Projection Expression
 	proj := expression.ProjectionBuilder{} // NamesList() //expression.Name("aName"), expression.Name("anotherName"), expression.Name("oneOtherName"))
@@ -1081,19 +1126,18 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 
 	// will add USERID / `type`#last-modified-date so we can query liike
 	// Get latest created `type` (ie: tasks) for a user...
-	fmt.Println("OK GOT SEESION OF")
+	fmt.Println("OK GOT SEESION O ..")
 	fmt.Println(reqObj.Session)
 	fmt.Println("================")
-	if (reqObj.Session.Userid == "") {
+	if reqObj.Session.Userid == "" {
 		mutation.Input["upk"] = reqObj.Session.Userid
 	} else {
-		if (reqObj.Session.Userid == "admin-api") {
+		if reqObj.Session.Userid == "admin-api" {
 			fmt.Println("WE ARE IN API MODE..., will ignore UPK")
 		} else {
 			fmt.Println("NOT IN API? userid is :", reqObj.Session.Userid)
 		}
 	}
-
 
 	// childSK := dynamoPutInput.Item["sk"].S
 	if hasChildMutation {
@@ -1104,7 +1148,8 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 				origSK = origSK + "#" + v.(string)
 			} else {
 				// error
-				theErrMsg := fmt.Sprintf("Field '%s' missing", childSKSuffixField)
+
+				// theErrMsg := fmt.Sprintf("Field '%s' missing", childSKSuffixField)
 				/*if (os.Getenv("IS_LOCAL") == "true") {
 				        var item map[string]interface{}
 					item["errorMessage"] = theErrMsg
@@ -1112,7 +1157,10 @@ func (p GenericHandler) handleCreateGeneric(reqObj *acenteralib.RequestObject, i
 				} else {
 					return nil, errors.New(theErrMsg)
 				}*/
-				return nil, errors.New(theErrMsg)
+				// origSK = origSK //  + "#" + v.(string)
+				// origSK = ""
+				// return nil, errors.New(theErrMsg)
+				isNextMutation = true
 			}
 		}
 		if !isNextMutation {
@@ -1323,6 +1371,48 @@ type GenericHandler struct {
 	ActionWordPlurial  string
 }
 
+func (p GenericHandler) SetAwsLambda(m acenteralib.SharedLib) interface{} {
+	p.Awslambda = m
+
+	/*
+			vp := reflect.New(reflect.TypeOf(p))
+		    vp.Elem().Set(p)
+			return vp.Interface()
+	*/
+	return reflect.ValueOf(&p).Elem().Interface() // .FieldByName("ElementType").Set(reflect.ValueOf(m))
+	// return reflect.ValueOf(&p).Elem().FieldByName("Models").Set(reflect.ValueOf(m))
+}
+
+func (p GenericHandler) SetModel(m Models) interface{} {
+	p.Models = m
+
+	/*
+			vp := reflect.New(reflect.TypeOf(p))
+		    vp.Elem().Set(p)
+			return vp.Interface()
+	*/
+	return reflect.ValueOf(&p).Elem().Interface() // .FieldByName("ElementType").Set(reflect.ValueOf(m))
+	// return reflect.ValueOf(&p).Elem().FieldByName("Models").Set(reflect.ValueOf(m))
+}
+func (p GenericHandler) SetElementType(m string) interface{} {
+	fmt.Println("SET ELEMENT TYPE HERE ... using", m)
+	fmt.Println("P IS :", p)
+	fmt.Println("P ptr IS :", &p)
+	p.ElementType = m
+
+	// vp := reflect.New(reflect.TypeOf(p))
+
+	return reflect.ValueOf(&p).Elem().Interface() // .FieldByName("ElementType").Set(reflect.ValueOf(m))
+	// vp.Elem().Set(p)
+	// return vp.Interface()
+}
+
+func (p GenericHandler) SetActionWords(actionWord string, actionWordSingular string, actionWordPlurial string) {
+	p.ActionWord = actionWord
+	p.ActionWordSingular = actionWordSingular
+	p.ActionWordPlurial = actionWordPlurial
+}
+
 func (p GenericHandler) InitializeRoutes(r resolvers.Repository) error {
 	var err error
 	fmt.Println("TEST HERE  ", p.InitHandler)
@@ -1374,32 +1464,171 @@ func (p GenericHandler) InitializeRoutes(r resolvers.Repository) error {
 					err = r.Add(fmt.Sprintf("query.list%sAdmin", p.ActionWordPlurial), p.HandleListAdmin) // query.listPosts(listInput) with nextTokens
 				}
 
-				fmt.Println("DID WE GOT RESEOLVERS?", p.Models.Resolvers)
+				// fmt.Println("DID WE GOT RESEOLVERS?", p.Models.Resolvers)
 				for tmpV, k := range p.Models.Resolvers {
 					v := strings.ReplaceAll(tmpV, "_", ".")
 					if k.(string) == "create" {
-						fmt.Println("Adding custom resolvers : ", fmt.Sprintf("mutation.%s", v), " for :", k.(string))
-						fmt.Println("Added custom resolvers : ", fmt.Sprintf("mutation.%s", v), " for : creaete generic")
+						// fmt.Println("Adding custom resolvers : ", fmt.Sprintf("mutation.%s", v), " for :", k.(string))
+						// fmt.Println("Added custom resolvers : ", fmt.Sprintf("mutation.%s", v), " for : creaete generic")
 						err = r.Add(fmt.Sprintf("mutation.%s", v), p.HandleCreateGeneric)
-						fmt.Println("ERR IS :", err)
+						// fmt.Println("ERR IS :", err)
 					} else {
-						fmt.Println("z1 - Adding custom resolvers : ", fmt.Sprintf("%s", v), " for :", k.(string))
-						if val, ok := Func_Map[fmt.Sprintf("%s", v)]; ok {
-							//do something here
-							fmt.Println("Added custom resolver HERE RESOLVER name is :", fmt.Sprintf("%s", v), " VAL is :", val)
+						// fmt.Println("z1 - Adding custom resolvers : ", fmt.Sprintf("%s", v), " for :", k.(string))
 
-							// fmt.Println("ADDING OF VAL OF :", val())
-							// if v1, ok1 := Func_Iface[fmt.Sprintf("%s", v)]; ok1 {
-								v1 := k.(string)
-								fmt.Println("TEST V1:", v1)
-								// miType := val
-								s := val.MethodByName(v1)
-								fmt.Println("VAL IS:", val, " v1 is :", v1)
-								fmt.Println("S IS :", s)
-								if !s.IsValid(){
-									fmt.Println("not correct")
+						for kw, val := range Func_Map {
+							// if val, ok := Func_Map[fmt.Sprintf("%s", v)]; ok {
+							//do something here
+							fmt.Println("TEST FUNCMAP OF:", kw, val)
+							v1 := k.(string)
+							/*
+								// miType := reflect.New(val.Type())
+								miType := reflect.TypeOf(reflect.New(val.Type())) // .Type()) // reflect.New(reflect.TypeOf(val.Type())).Elem()) // .Interface()
+								// miType := reflect.Indirect(val)
+								for i := 0; i < miType.NumMethod(); i++ {
+									method := miType.Method(i)
+
+									fmt.Println("METHOD NAME IS:" , method.Name)
 								}
 
+							*/
+							fmt.Println("CHECK If we can find Method:", v1)
+							s := val.MethodByName(v1)
+							fmt.Println("s IS ....", s)
+							if s.IsValid() {
+								fmt.Println("FOUND IT for:", v1)
+							}
+							if !s.IsValid() {
+								continue
+							}
+
+							y := val.Interface()
+							vp := reflect.New(reflect.TypeOf(y))
+							vp.Elem().Set(reflect.ValueOf(y))
+							s1 := vp.Elem()
+							objIfaceTmp := vp.Interface()
+							fmt.Println("VP IS :", vp)
+							fmt.Println("OBJIFACEIS:", objIfaceTmp)
+
+							// ptr := r.FCTObj.Interface()
+							sModel := s1.MethodByName("SetModel")
+							if sModel.IsValid() {
+								fmt.Println("GOT SET MODEL FCT", sModel)
+
+								// turn that into an interface{}
+								methodIface := sModel.Interface()
+								// turn that into a function that has the expected signature
+								// sElemeType := methodIface.(func(map[string][]string) map[string]string)
+								sModelMethod := methodIface.(func(Models) interface{})
+								fmt.Println("WILL SET MODELS OF", p.Models)
+								ka := sModelMethod(p.Models)
+								fmt.Println("sModelMethod IS OF :", sModelMethod)
+								fmt.Println("sModelMethod IS OF RES :", ka)
+								vp.Elem().Set(reflect.ValueOf(ka))
+								s1 = vp.Elem()
+							}
+							fmt.Println("VAL IS OF ", val)
+
+							// ptr := r.FCTObj.Interface()
+							sAws := s1.MethodByName("SetAwsLambda")
+							if sAws.IsValid() {
+								fmt.Println("GOT SET MODEL FCT", sModel)
+
+								// turn that into an interface{}
+								methodIface := sAws.Interface()
+								// turn that into a function that has the expected signature
+								// sElemeType := methodIface.(func(map[string][]string) map[string]string)
+								sAwsLambdaMethod := methodIface.(func(acenteralib.SharedLib) interface{})
+								fmt.Println("WILL SET AWS LAMBDA OF", p.Awslambda)
+								ka := sAwsLambdaMethod(p.Awslambda)
+								fmt.Println("sAwsLambdaMethod IS OF :", sAwsLambdaMethod)
+								fmt.Println("sAwsLambdaMethod IS OF RES :", ka)
+								vp.Elem().Set(reflect.ValueOf(ka))
+								s1 = vp.Elem()
+							}
+							fmt.Println("sAwsLambdaMethod VAL IS OF ", val)
+
+							vvv := s1 // reflect.ValueOf(objIfaceTmp)
+							sElemeType := vvv.MethodByName("SetElementType")
+							// sElemeType := val.MethodByName("SetElementType")
+							fmt.Println("ZZZZ :", sElemeType)
+							fmt.Println("ZZZZ 11 :", sElemeType.IsValid())
+							if sElemeType.IsValid() {
+								fmt.Println("GOT SET ELEMENTTYPE FCT", sElemeType)
+
+								// turn that into an interface{}
+								methodIface := sElemeType.Interface()
+								// turn that into a function that has the expected signature
+								// sElemeType := methodIface.(func(map[string][]string) map[string]string)
+								sElemeTypeMethod := methodIface.(func(string) interface{})
+
+								kz := sElemeTypeMethod(p.ElementType)
+								// sElemeType.Invoke(methodIface, vp, p.ElementType)
+								/*m := map[string][]string{"foo": []string{"bar"}}
+								in := []reflect.Value{reflect.ValueOf(m)}
+								sElemeType.Call(in)
+								*/
+								/*
+									mz := p.ElementType
+									in := []reflect.Value{reflect.ValueOf(mz)}
+									kz := sElemeType.Call(in)
+								*/
+								fmt.Println("GOT SET ELEMENTYPE MOVDEL END  IS OF RES :", kz)
+								vp.Elem().Set(reflect.ValueOf(kz))
+								s1 = vp.Elem()
+							}
+
+							fmt.Println("1 - VP IS :", vp)
+							fmt.Println("1 - OBJIFACEIS:", objIfaceTmp)
+							fmt.Println("s1 - is:", s1)
+
+							/*
+								for i := 0; i < vp.Elem().NumMethod(); i++ {
+									method := vp.Elem().Method(i)
+									fmt.Println("METHOD NAME IS:" , method.Name)
+								}
+							*/
+
+							/*
+								t := reflect.TypeOf(val.Type()).Elem()
+
+								fmt.Println(val.Interface()) // This is the p pointer
+								// v2 := val.Elem()
+								fmt.Println("V2 is :", val.Interface())
+
+								// tw := t.Interface()
+								tw := reflect.New(t)
+
+								fmt.Println("Y IS :", t)
+								for i := 0; i < t.NumField(); i += 1 {
+									field := t.Field(i)
+									fmt.Println(field)
+									// fieldType := field.Type()
+									// fmt.Println("FIELD:", field, " type:", fieldType)
+								}
+								fmt.Println("METHOD TEST")
+								for i := 0; i < tw.NumMethod(); i += 1 {
+									m1 := tw.Method(i)
+									fmt.Println(m1.Name)
+									// fieldType := field.Type()
+									// fmt.Println("FIELD:", field, " type:", fieldType)
+								}
+							*/
+
+							/*
+								typeOfS := val.Elem().Type()
+								sectionName := getTypeName(configStruct)
+								for i := 0; i < v.Elem().NumField(); i++ {
+									if v.Elem().Field(i).CanInterface() {
+										kName := conf.Get(sectionName + "." + typeOfS.Field(i).Name)
+										kValue := reflect.ValueOf(kName)
+										if (kValue.IsValid()) {
+											v.Elem().Field(i).Set(kValue.Convert(typeOfS.Field(i).Type))
+										}
+									}
+								}
+							*/
+
+							/*
 								vp := reflect.New(reflect.TypeOf(s.Type()))
 								vpTmp := vp.Interface()
 								fmt.Println("Sa1 IS tttt:", s.Type())
@@ -1409,9 +1638,12 @@ func (p GenericHandler) InitializeRoutes(r resolvers.Repository) error {
 								x := reflect.TypeOf(s.Call)
 								fmt.Println("Sa3a2 S :", s.Type().NumIn())
 								fmt.Println("X IS :", x)
-								err = r.AddFct(fmt.Sprintf("%s", v), s) // .(func())(args[0].(string)) // Func_Map[fmt.Sprintf("%s", v)])
-								fmt.Println("GOT ERROR TMP:", err)
-								/*
+							*/
+							fmt.Println("Added custom resolver:", fmt.Sprintf("%s", v))
+							err = r.AddFct(fmt.Sprintf("%s", v), s, s1, v1) // .(func())(args[0].(string)) // Func_Map[fmt.Sprintf("%s", v)])
+							fmt.Println("GOT ERROR TMP:", err)
+
+							/*
 								for i := 0; i < miType.NumMethod(); i++ {
 									method := miType.Method(i)
 									fmt.Println("METHOD NAME IS:" , method.Name)
@@ -1449,14 +1681,14 @@ func (p GenericHandler) InitializeRoutes(r resolvers.Repository) error {
 										break
 									}
 								}
-								*/
-								/*valueOf := reflect.ValueOf(v1)
-								fmt.Println("ITS TYPE OF :", valueOf.Type().Name())
-								*/
-								// err = r.Add(fmt.Sprintf("%s", v), val.(valueOf.Type()))
-								// err = r.Add(fmt.Sprintf("%s", v), val.(func(*acenteralib.RequestObject, map[string]interface{}, valueOf.Type()) (*map[string]interface{}, error)))
-								// err = r.Add(fmt.Sprintf("%s", v), val) // .(func())(args[0].(string)) // Func_Map[fmt.Sprintf("%s", v)])
-								// fmt.Println("GOT ERROR TMP:", err)
+							*/
+							/*valueOf := reflect.ValueOf(v1)
+							fmt.Println("ITS TYPE OF :", valueOf.Type().Name())
+							*/
+							// err = r.Add(fmt.Sprintf("%s", v), val.(valueOf.Type()))
+							// err = r.Add(fmt.Sprintf("%s", v), val.(func(*acenteralib.RequestObject, map[string]interface{}, valueOf.Type()) (*map[string]interface{}, error)))
+							// err = r.Add(fmt.Sprintf("%s", v), val) // .(func())(args[0].(string)) // Func_Map[fmt.Sprintf("%s", v)])
+							// fmt.Println("GOT ERROR TMP:", err)
 							// }
 						}
 					}
